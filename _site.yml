@@ -10,10 +10,6 @@ navbar:
       icon: fa-home
       href: index.html
       menu:
-        - text: "Manipulating data in R Exercise"
-          href: ex1_intro2R.html
-        - text: "Manipulating data in R Solutions"
-          href: ex1_intro2R_answers.html
         - text: "Data storage schema"
           href: lesson1.html
                                          
