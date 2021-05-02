@@ -3,7 +3,7 @@ output_dir: "."
 author: https://www.linkedin.com/in/benson-kenduiywo-1a218137
 google_analytics: UA-154446467-1
 navbar:
-  title: "Geostatistics in R"
+  title: "Digital Image Processing in R"
   type: inverse
   left:
     - text: "Home"
@@ -14,20 +14,9 @@ navbar:
           href: ex1_intro2R.html
         - text: "Manipulating data in R Solutions"
           href: ex1_intro2R_answers.html
-        - text: "Exploratory data analysis"
+        - text: "Data storage schema"
           href: lesson1.html
-        - text: "Spatial prediction"
-          href: lesson2.html
-        - text: "Non-geostatistical spatial prediction"
-          href: lesson3.html  
-        - text: "Geostatistical spatial prediction"
-          href: lesson4.html   
-        - text: "Model-Based Geostatistics"
-          href: lesson5.html   
-        - text: "Spatial geo-regression"
-          href: lesson6.html   
-        - text: "Analyzing spatial trend"
-          href: lesson7.html                                          
+                                         
   right:
     - icon: fa-envelope fa-lg
       href: mailto:bensonkemboi@gmail.com

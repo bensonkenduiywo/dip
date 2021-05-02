@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
 
-<title>ex1_intro2R_answers.utf8.md</title>
+<title>ex1_intro2R_answers.utf8</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -235,6 +234,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -270,7 +270,7 @@ $(document).ready(function () {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Geostatistics in R</a>
+      <a class="navbar-brand" href="index.html">Digital Image Processing in R</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -290,25 +290,7 @@ $(document).ready(function () {
       <a href="ex1_intro2R_answers.html">Manipulating data in R Solutions</a>
     </li>
     <li>
-      <a href="lesson1.html">Exploratory data analysis</a>
-    </li>
-    <li>
-      <a href="lesson2.html">Spatial prediction</a>
-    </li>
-    <li>
-      <a href="lesson3.html">Non-geostatistical spatial prediction</a>
-    </li>
-    <li>
-      <a href="lesson4.html">Geostatistical spatial prediction</a>
-    </li>
-    <li>
-      <a href="lesson5.html">Model-Based Geostatistics</a>
-    </li>
-    <li>
-      <a href="lesson6.html">Spatial geo-regression</a>
-    </li>
-    <li>
-      <a href="lesson7.html">Analyzing spatial trend</a>
+      <a href="lesson1.html">Data storage schema</a>
     </li>
   </ul>
 </li>
@@ -380,67 +362,58 @@ $(document).ready(function () {
 ##  [9] &quot;ALTITUDE&quot;                    &quot;FACILITY.TYPE&quot;              
 ## [11] &quot;OWNERSHIP&quot;                   &quot;OPERATING_STATUS&quot;</code></pre>
 <pre class="r"><code>head(d)</code></pre>
-<pre><code>##   FACILITY_ID_NUMBER     FACILITY_NAME LATITUDE LONGITUDE
-## 1           100000-9 BUPANDAGILA - SDA -2.64496  34.01009
-## 2           100001-7     BUPANDWAMHELA -2.44682  32.15260
-## 3           100002-5            BUPIGI -3.55117  33.69935
-## 4           100003-3            BUPIGU -9.50139  33.34760
-## 5           100004-1              BUPU -7.19919  39.02250
-## 6           100005-8            BURERE -1.30831  33.96400
-##                 ZONE    REGION                    COUNCIL
-## 1            Western    Simiyu       Bariadi Town Council
-## 2               Lake    Mwanza Sengerema District Council
-## 3            Western Shinyanga   Kishapu District Council
-## 4 Southern Highlands     Mbeya     Ileje District Council
-## 5            Eastern     Pwani  Mkuranga District Council
-## 6               Lake      Mara     Rorya District Council
-##   COMMON.FACILITY.HEALTH.NAME ALTITUDE FACILITY.TYPE
-## 1                                 1298    Dispensary
-## 2                    Zahanati     1171    Dispensary
-## 3                      Bupigi     1175    Dispensary
-## 4                                 1234    Dispensary
-## 5                                  143    Dispensary
-## 6                                 3899    Dispensary
-##                  OWNERSHIP OPERATING_STATUS
-## 1 Faith based organization        Operating
-## 2                   Public        Operating
-## 3                   Public        Operating
-## 4                   Public        Operating
-## 5                   Public        Operating
-## 6 Faith based organization        Operating</code></pre>
+<pre><code>##   FACILITY_ID_NUMBER     FACILITY_NAME LATITUDE LONGITUDE               ZONE
+## 1           100000-9 BUPANDAGILA - SDA -2.64496  34.01009            Western
+## 2           100001-7     BUPANDWAMHELA -2.44682  32.15260               Lake
+## 3           100002-5            BUPIGI -3.55117  33.69935            Western
+## 4           100003-3            BUPIGU -9.50139  33.34760 Southern Highlands
+## 5           100004-1              BUPU -7.19919  39.02250            Eastern
+## 6           100005-8            BURERE -1.30831  33.96400               Lake
+##      REGION                    COUNCIL COMMON.FACILITY.HEALTH.NAME ALTITUDE
+## 1    Simiyu       Bariadi Town Council                                 1298
+## 2    Mwanza Sengerema District Council                    Zahanati     1171
+## 3 Shinyanga   Kishapu District Council                      Bupigi     1175
+## 4     Mbeya     Ileje District Council                                 1234
+## 5     Pwani  Mkuranga District Council                                  143
+## 6      Mara     Rorya District Council                                 3899
+##   FACILITY.TYPE                OWNERSHIP OPERATING_STATUS
+## 1    Dispensary Faith based organization        Operating
+## 2    Dispensary                   Public        Operating
+## 3    Dispensary                   Public        Operating
+## 4    Dispensary                   Public        Operating
+## 5    Dispensary                   Public        Operating
+## 6    Dispensary Faith based organization        Operating</code></pre>
 <pre class="r"><code>tail(d)</code></pre>
-<pre><code>##      FACILITY_ID_NUMBER FACILITY_NAME  LATITUDE LONGITUDE    ZONE
-## 7066           110843-0        MADONA -6.827267  39.23248 Eastern
-## 7067           110844-8   AAR MBAGALA -6.910340  39.26977 Eastern
-## 7068           110845-5       KANDAGA -4.960950  29.84394 Western
-## 7069           110846-3       KALENGE -4.956860  29.87916 Western
-## 7070           110847-1         MLELA -4.918070  29.85859 Western
-## 7071           110848-9         MLELA -4.918070  29.85859 Western
-##             REGION                  COUNCIL COMMON.FACILITY.HEALTH.NAME
-## 7066 Dar es Salaam  Ilala Municipal Council                      Madona
-## 7067 Dar es Salaam Temeke Municipal Council          AAR Mbagala Clinic
-## 7068        Kigoma                                              KANDAGA
-## 7069        Kigoma                                              KALENGE
-## 7070        Kigoma                                                MLELA
-## 7071        Kigoma                                                MLELA
-##      ALTITUDE FACILITY.TYPE OWNERSHIP OPERATING_STATUS
-## 7066       NA Health Centre   Private        Operating
-## 7067       66    Dispensary   Private        Operating
-## 7068       NA    Dispensary    Public        Operating
-## 7069     1035    Dispensary    Public        Operating
-## 7070       NA    Dispensary    Public        Operating
-## 7071      929    Dispensary    Public        Operating</code></pre>
+<pre><code>##      FACILITY_ID_NUMBER FACILITY_NAME  LATITUDE LONGITUDE    ZONE        REGION
+## 7066           110843-0        MADONA -6.827267  39.23248 Eastern Dar es Salaam
+## 7067           110844-8   AAR MBAGALA -6.910340  39.26977 Eastern Dar es Salaam
+## 7068           110845-5       KANDAGA -4.960950  29.84394 Western        Kigoma
+## 7069           110846-3       KALENGE -4.956860  29.87916 Western        Kigoma
+## 7070           110847-1         MLELA -4.918070  29.85859 Western        Kigoma
+## 7071           110848-9         MLELA -4.918070  29.85859 Western        Kigoma
+##                       COUNCIL COMMON.FACILITY.HEALTH.NAME ALTITUDE
+## 7066  Ilala Municipal Council                      Madona       NA
+## 7067 Temeke Municipal Council          AAR Mbagala Clinic       66
+## 7068                                              KANDAGA       NA
+## 7069                                              KALENGE     1035
+## 7070                                                MLELA       NA
+## 7071                                                MLELA      929
+##      FACILITY.TYPE OWNERSHIP OPERATING_STATUS
+## 7066 Health Centre   Private        Operating
+## 7067    Dispensary   Private        Operating
+## 7068    Dispensary    Public        Operating
+## 7069    Dispensary    Public        Operating
+## 7070    Dispensary    Public        Operating
+## 7071    Dispensary    Public        Operating</code></pre>
 <ol start="4" style="list-style-type: decimal">
 <li>What is the number of facilities for each zone? See <a href="https://rspatial.org/intr/7-explore.html#data-exploration">data exploration</a></li>
 </ol>
 <pre class="r"><code>table(d$ZONE) </code></pre>
 <pre><code>## 
-##            Central            Eastern               Lake 
-##                579               1242               1078 
-##           Northern           Southern Southern Highlands 
-##               1274                716               1232 
-##            Western 
-##                950</code></pre>
+##            Central            Eastern               Lake           Northern 
+##                579               1242               1078               1274 
+##           Southern Southern Highlands            Western 
+##                716               1232                950</code></pre>
 <pre class="r"><code>summary(d)</code></pre>
 <pre><code>##  FACILITY_ID_NUMBER FACILITY_NAME         LATITUDE         LONGITUDE    
 ##  Length:7071        Length:7071        Min.   :-11.648   Min.   :29.61  
