@@ -1,0 +1,50 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### About me
+
+An overview of my activities is available here:
+<div itemscope itemtype="https://schema.org/Person"><a itemprop="sameAs" content="https://orcid.org/0000-0002-8448-0499" href="https://orcid.org/0000-0002-8448-0499" target="orcid.widget" rel="me noopener noreferrer" style="vertical-align:top;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" style="width:1em;margin-right:.5em;" alt="ORCID iD icon">https://orcid.org/0000-0002-8448-0499</a></div>
+
+### Background
+
+The goal of this tutorial is to introduce principles of Geostatical data analysis in R. Geostatistics is a branch of statistical sciences that studies spatial/temporal phenomena & capitalizes on spatial relationships to model possible values of variable(s) at unobserved, unsampled locations (Caers, 2005). Geostatistical tools are useful for interpolation of sampled data and simulation/prediction of phenomena. 
+
+Generally, geostatistics deals with the analysis of **random fields** $Z(s)$, where *Z* is a random variable and *x* the non-random spatial index. Basically, at a limited number of sampled locations, measurements on *Z* are available,
+and prediction (interpolation) of *Z* is required at non-observed locations
+$s_0$, or the mean of *Z* is required over a specific region $\beta_0$. Geostatistical analysis involves estimation and modelling of spatial correlation (covariance or semivariance), and evaluating whether simplifying assumptions such as stationarity can be justified or need refinement. Advanced topics include the conditional simulation of Z(s), for example over locations on a grid, and model-based inference, which propagates uncertainty of correlation parameters through spatial predictions or simulations.
+
+We will use **gstat** package, because it offers the widest geostatistical functionality in R namely: 
+
+1. variogram cloud diagnostics, 
+2. variogram modelling, 
+3. simple kriging to local universal cokriging, 
+4. multivariate geostatistics, 
+5. block kriging, 
+6. indicator kriging and, 
+7. Gaussian conditional simulation e.t.c
+
+### Structure
+
+The tutorial is organized into the following sections:
+
+1. [Manipulating data in R: Excercise 1](ex1_intro2R.html).
+2. [Solutions to Exercise 1](ex1_intro2R_answers.html).
+3. [Exploratory data analysis](lesson1.html) 
+5. [Spatial prediction](lesson2.html)
+5. [Non-geostatistical spatial prediction](lesson3.html)
+6. [Geostatistical spatial prediction](lesson4.html)
+7. [Model-Based Geostatistics](lesson5.html)
+8. [Spatial geo-regression](lesson6.html)
+9. [Analyzing spatial trend](lesson7.html)
+
+### Resources
+
+We will use R software. R software is opensource and can be downloaded from https://cran.r-project.org/. A suitable R user interface that we shall use is [R Studio](https://rstudio.com/products/rstudio/download/). First download and install the latest version of R followed by the editor (RStudio). Other editors are available and you are free to use depending on your preference or previous experience. You will also need [Git](https://gitforwindows.org/) for version control in Rstudio and your [Github](https://github.com/) account. For more details on version control with Git in rstudio [click here](https://support.rstudio.com/hc/en-us/articles/200532077-Version-Control-with-Git-and-SVN).
+
+
+### References
+
+Caers, J. (2005). [*Petroleum geostatistics*](https://store.spe.org/Petroleum-Geostatistics-P45.aspx). Society of Petroleum Engineers Richardson
