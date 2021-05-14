@@ -9,7 +9,6 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Benson Kenduiywo" />
 
 
 <title>Image Fusion</title>
@@ -29,8 +28,11 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
@@ -221,6 +223,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -228,6 +293,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -244,11 +319,18 @@ $(document).ready(function () {
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+        <li>
+  <a href="index.html">
     <span class="fas fa-home"></span>
      
     Home
+  </a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fas fa-gear"></span>
+     
+    More
      
     <span class="caret"></span>
   </a>
@@ -271,19 +353,19 @@ $(document).ready(function () {
 </li>
 <li>
   <a href="http://github.com/bensonkenduiywo">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
 <li>
   <a href="https://twitter.com/bensonkenduiywo">
-    <span class="fas fa-twitter fa-lg"></span>
+    <span class="fab fa-twitter fa-lg"></span>
      
   </a>
 </li>
 <li>
   <a href="https://www.linkedin.com/in/benson-kenduiywo-1a218137">
-    <span class="fas fa-linkedin fa-lg"></span>
+    <span class="fab fa-linkedin fa-lg"></span>
      
   </a>
 </li>
@@ -297,15 +379,13 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Image Fusion</h1>
-<h4 class="author">Benson Kenduiywo</h4>
-<h4 class="date">14/05/2021</h4>
 
 </div>
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. <strong>Data fusion</strong>: a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application (Ranchin and Wald, 2010).</p>
+<p>This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. <strong>Data fusion</strong> is a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application (<a href="https://doi.org/10.1007/978-1-4020-4385-7_11">Ranchin and Wald, 2010</a>).</p>
 <p>The principal motivation for image fusion is to improve the quality of the information contained in the output image in a process known as synergy. A study of existing image fusion techniques and applications shows that image fusion can provide us with an output image with an improved quality. In this case, the benefits of image fusion include:</p>
 <ol style="list-style-type: decimal">
 <li>Extended range of operation.</li>
@@ -316,8 +396,8 @@ $(document).ready(function () {
 <li>Compact representation of information.</li>
 </ol>
 </div>
-<div id="data" class="section level2">
-<h2>Data</h2>
+<div id="data-preparation" class="section level2">
+<h2>Data preparation</h2>
 <p>Load libraries, declare variables and data paths.</p>
 <pre class="r"><code>rm(list=ls(all=TRUE))    #Clears R memory
 unlink(&quot;.RData&quot;) 
@@ -418,8 +498,13 @@ plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;li
 plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;UAV&quot;)</code></pre>
 <p><img src="fusion_files/figure-html/d5-1.png" width="672" /></p>
 <p>First let us conduct a spectral fusion of S2 and UAV images. To do this we have to resample UAV image to S2 extents.</p>
-<pre class="r"><code>v_r &lt;- resample(v, s, method=&#39;bilinear&#39;)</code></pre>
-<p>Fuse the two images by multiplication and display it against the original ones.</p>
+<pre class="r"><code>v_r &lt;- resample(v, s, method=&#39;bilinear&#39;)
+ext(v_r) == ext(s)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="pixel-fusion" class="section level2">
+<h2>Pixel fusion</h2>
+<p>This sections considers fusion techniques which rely on simple pixel based operations on the input image values. The assumption is that the input images are spatially and temporally aligned, semantically equivalent and radiometrically calibrated. Therefore, let us fuse the two images by multiplication and display it against the original ones.</p>
 <pre class="r"><code>#Fuse by multiplication
 f1 &lt;- s * v_r
 f1</code></pre>
@@ -439,7 +524,7 @@ plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;li
 plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;S2&quot;, cex.axis=0.7)
 plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;Fused_multi&quot;, cex.axis=0.7)</code></pre>
 <p><img src="fusion_files/figure-html/d7-1.png" width="672" /></p>
-<p>What about mean fusion?</p>
+<p>What about mean fusion (i.e. taking the mean of each pixel’s reflectance in both UAV and S2)?</p>
 <pre class="r"><code>#Fuse by multiplication
 f2 &lt;- mean(s, v_r)
 f2</code></pre>
@@ -471,14 +556,53 @@ plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;l
 plotRGB(f3, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Zhou etal&quot;, axes=TRUE)</code></pre>
 <p><img src="fusion_files/figure-html/d9-1.png" width="672" /></p>
 </div>
+<div id="feature-based-fusion" class="section level2">
+<h2>Feature based fusion</h2>
+<p>In <em>feature fusion</em> we fuse together the features <span class="math inline">\(F_k,k \in{1,2, \dots, K}\)</span>. These features can be vegetation indices like Normalized Difference Index (NDVI) or feature maps that have been made semantically equivalent by transforming them into probabilistic <span class="math inline">\(p(m,n)\)</span>, or likelihood, maps.</p>
+<p>Let us start with NDVI (<span class="math inline">\(\text{NDVI}=\frac{\text{NIR}-\text{Red}}{\text{NIR}+\text{Red}}\)</span>. First compute NDVI for both UAV and S2.</p>
+<pre class="r"><code>n_v &lt;- (subset(v_r,&quot;nir&quot;)-subset(v_r,&quot;r&quot;))/(subset(v_r,&quot;nir&quot;)+subset(v_r,&quot;r&quot;))
+n_s &lt;- (subset(s,&quot;nir&quot;)-subset(s,&quot;r&quot;))/(subset(s,&quot;nir&quot;)+subset(s,&quot;r&quot;))
+x11()
+par(mfrow = c(1, 2), mar = c(5, 5, 1.4, 0.2))#c(bottom, left, top, right)
+plot(n_v, main=&quot;UAV NDVI&quot;)
+plot(n_s, main=&quot;S2 NDVI&quot;)</code></pre>
+<p><img src="fusion_files/figure-html/n1-1.png" width="672" /></p>
+<p>How can we fuse the NDVI index? Let us take an average of the two.</p>
+<pre class="r"><code>nf &lt;- mean(n_v, n_s)
+x11()
+plot(nf, main=&quot;Fused NDVI&quot;)</code></pre>
+<p><img src="fusion_files/figure-html/n2-1.png" width="672" /></p>
+<p>Is there a difference between UAV NDVI only and the fused one? Let’s evaluate the images below.</p>
+<pre class="r"><code>x11()
+plot(n_v, main=&quot;UAV NDVI&quot;)</code></pre>
+<p><img src="fusion_files/figure-html/n3-1.png" width="672" /></p>
+<pre class="r"><code>x11()
+plot(nf, main=&quot;Fused NDVI&quot;)</code></pre>
+<p><img src="fusion_files/figure-html/n3-2.png" width="672" /></p>
+</div>
+<div id="modelling-uav-reflectance" class="section level2">
+<h2>Modelling UAV reflectance</h2>
+<p>Due to the cost of UAV field operations can we model and predict its reflectance given? Let’s check the relationship between the two.</p>
+<pre class="r"><code>x11()
+par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 
+plot(as.vector(subset(s,&#39;b&#39;)),as.vector(subset(v_r,&#39;b&#39;)), xlab=&#39;S2&#39;, ylab=&#39;W1 UAV&#39;, main=&quot;Blue band&quot;,pch=16,cex=0.75, col=&#39;blue&#39;)
+plot(as.vector(subset(s,&#39;g&#39;)),as.vector(subset(v_r,&#39;g&#39;)), xlab=&#39;S2&#39;, ylab=&#39;W1 UAV&#39;, main=&quot;Green band&quot;,pch=16,cex=0.75, col=&#39;green&#39;)
+plot(as.vector(subset(s,&#39;r&#39;)),as.vector(subset(v_r,&#39;r&#39;)), xlab=&#39;S2&#39;, ylab=&#39;W1 UAV&#39;, main=&quot;Red band&quot;,pch=16,cex=0.75, col=&#39;red&#39;)
+plot(as.vector(subset(s,&#39;nir&#39;)),as.vector(subset(v_r,&#39;nir&#39;)), xlab=&#39;S2&#39;, ylab=&#39;W1 UAV&#39;, main=&quot;NIR band&quot;,pch=16,cex=0.75)</code></pre>
+<p><img src="fusion_files/figure-html/m1-1.png" width="672" /></p>
+<p>There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?</p>
+</div>
 <div id="references" class="section level2">
 <h2>References</h2>
-<p>Thierry Ranchin and Lucien Wald. <em>Data Fusion in Remote Sensing of Urban and Suburban Areas</em>, pages 193–218. Springer Netherlands, Dordrecht, 2010. ISBN 978-1-4020-4385- 7. doi: 10:1007/978-1-4020-4385-7 11. URL <a href="http://dx:doi:org/10:1007/978-1-" class="uri">http://dx:doi:org/10:1007/978-1-</a> 4020-4385-7 11.</p>
+<p>Thierry Ranchin and Lucien Wald. <em>Data Fusion in Remote Sensing of Urban and Suburban Areas</em>, pages 193–218. Springer Netherlands, Dordrecht, 2010. ISBN 978-1-4020-4385- 7. doi: 10:1007/978-1-4020-4385-7 11. URL <a href="https://doi.org/10.1007/978-1-4020-4385-7_11" class="uri">https://doi.org/10.1007/978-1-4020-4385-7_11</a>.</p>
 <p>Y. Zou, G. Li and S. Wang, “The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance,” <em>IEEE International Conference on Information and Automation (ICIA)</em>, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.</p>
 </div>
 
+<p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
 
 
+</div>
+</div>
 
 </div>
 
@@ -511,6 +635,32 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

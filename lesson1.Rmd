@@ -1,8 +1,12 @@
 ---
 title: "Data storage schema"
-author: "Benson Kenduiywo"
-date: "02/05/2021"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -28,87 +32,55 @@ library(sen2r)
 Let us use a GUI to donwload sentinel 2 data.
 
 ```{r s2}
-sen2r()
+#sen2r()
 ```
 
 Next lets save our login credentials by running the command `write_scihub_login("my_user", "my_password")` where 'my_user' is your username and 'my_password' the corresponding [scihub](https://scihub.copernicus.eu/) account password. If so wish you can use an interactive GUI using the command `sen2r()` but ensure to install the following packages `mapedit`, `shinyFiles`, `shinydashboard`, and `shinyWidgets`. 
 
-```{r s2}
+```{r s3}
 #write_scihub_login("my_user", "my_password")
-
-path <- getwd()
-aoi <- paste0(path,"/data/JKUAT.json")
-out_dir <- paste0(path,"/data/")
-safe_dir <- dir.create(paste0(path,"/safe/"),recursive = TRUE)
-
-out1 <- sen2r(
-  gui = FALSE,
-  extent = system.file(aoi, package = "sen2r"),
-  extent_name = 'JKUAT',
-  timewindow = c("2021-01-01", "2021-01-12"),
-  list_prods = "BOA",
-  list_rgb = "RGB832B",
-  path_l1c = safe_dir,
-  path_l2a = safe_dir,
-  path_out = out_dir,
-  clip_on_extent = TRUE,
-  extent_as_mask = TRUE,
-  overwrite =TRUE
-)
-
-
-safe_folder <- tempfile(pattern = "safe_")
-out_folder_1 <- tempfile(pattern = "Example1_")
-sel_tile_1 <- s2tiles_kaz[sample(nrow(s2tiles_kaz),1),] %>%
-  sf::st_transform(3857)
-sel_tile_1$tile_id
-## [1] "40TET"
-sel_extent_1 <- sf::st_centroid(sel_tile_1) %>% st_buffer(5e3)
-out1 <- sen2r(
-  gui = FALSE,
-  extent = sel_extent_1,
-  timewindow = c("2018-02-21", "2018-03-02"),
-  list_rgb = "RGB432T",
-  path_l1c = safe_dir,
-  path_l2a = safe_dir,
-  path_out = out_dir,
-  log = log_path_1 <- tempfile()
-)
+# 
+# path <- getwd()
+# aoi <- paste0(path,"/data/JKUAT.json")
+# out_dir <- paste0(path,"/data/")
+# safe_dir <- dir.create(paste0(path,"/safe/"),recursive = TRUE)
+# 
+# out1 <- sen2r(
+#   gui = FALSE,
+#   extent = system.file(aoi, package = "sen2r"),
+#   extent_name = 'JKUAT',
+#   timewindow = c("2021-01-01", "2021-01-12"),
+#   list_prods = "BOA",
+#   list_rgb = "RGB832B",
+#   path_l1c = safe_dir,
+#   path_l2a = safe_dir,
+#   path_out = out_dir,
+#   clip_on_extent = TRUE,
+#   extent_as_mask = TRUE,
+#   overwrite =TRUE
+# )
+# 
+# 
+# safe_folder <- tempfile(pattern = "safe_")
+# out_folder_1 <- tempfile(pattern = "Example1_")
+# sel_tile_1 <- s2tiles_kaz[sample(nrow(s2tiles_kaz),1),] %>%
+#   sf::st_transform(3857)
+# sel_tile_1$tile_id
+# ## [1] "40TET"
+# sel_extent_1 <- sf::st_centroid(sel_tile_1) %>% st_buffer(5e3)
+# out1 <- sen2r(
+#   gui = FALSE,
+#   extent = sel_extent_1,
+#   timewindow = c("2018-02-21", "2018-03-02"),
+#   list_rgb = "RGB432T",
+#   path_l1c = safe_dir,
+#   path_l2a = safe_dir,
+#   path_out = out_dir,
+#   log = log_path_1 <- tempfile()
+# )
 
 ```
 
-
-```{r}
-library(RGISTools)
-sres <- senSearch(startDate = as.Date("2021-01-01","%Y-%m-%d"),
-endDate = as.Date("2021-01-10","%Y-%m-%d"),
-platform = "Sentinel-2",
-extent = sf::st_read("./data/JKUAT.kmz"),
-product = "S2MSI1C",
-username = "bensonkemboi",
-password = "Roseflower#3700")
-
-# filtering the path R094 where Navarre is located
-names(sres)
-sres.sen.R094 <- sres[grepl("R094", names(sres))]
-names(sres.sen.R094)
-# list the dates in sres
-senGetDates(names(sres.sen.R094),format="%Y%j")
-wdir <- file.path(tempdir(),"Path_for_downloading_folder")
-# donwload the imagery
-senDownload(searchres = sres.sen.R094,
-username = "username",
-password = "password",
-AppRoot = wdir,
-unzip = TRUE)
-wdir.sen.unzip <- file.path(wdir,"Sentinel","unzip")
-files.sen.unzip<-list.files(wdir.sen.unzip,
-pattern = "\\TCI.jp2$",
-full.names = TRUE,
-recursive = TRUE)
-img.sen.rgb<-stack(files.sen.unzip[1])
-plotRGB(img.sen.rgb)
-```
 
 
 ## References

@@ -1,8 +1,12 @@
 ---
 title: "Image Fusion"
-author: "Benson Kenduiywo"
-date: "14/05/2021"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. **Data fusion**: a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application (Ranchin and Wald, 2010).
+This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. **Data fusion** is a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application ([Ranchin and Wald, 2010](https://doi.org/10.1007/978-1-4020-4385-7_11)).
 
 The principal motivation for image fusion is to improve the quality of the information
 contained in the output image in a process known as synergy. A study of existing image
@@ -25,7 +29,7 @@ image with an improved quality. In this case, the benefits of image fusion inclu
 5. Robust system performance.
 6. Compact representation of information.
 
-## Data
+## Data preparation
 
 Load libraries, declare variables and data paths.
 
@@ -95,9 +99,12 @@ First let us conduct a spectral fusion of S2 and UAV images. To do this we have 
 
 ```{r d6}
 v_r <- resample(v, s, method='bilinear')
+ext(v_r) == ext(s)
 ```
 
-Fuse the two images by multiplication and display it against the original ones.
+## Pixel fusion
+
+This sections considers fusion techniques which rely on simple pixel based operations on the input image values. The assumption is that the input images are spatially and temporally aligned, semantically equivalent and radiometrically calibrated. Therefore, let us fuse the two images by multiplication and display it against the original ones.
 
 ```{r d7}
 #Fuse by multiplication
@@ -112,7 +119,7 @@ plotRGB(f1, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="Fused_multi
 
 ```
 
-What about mean fusion?
+What about mean fusion (i.e. taking the mean of each pixel's reflectance in both UAV and S2)?
 
 ```{r d8}
 #Fuse by multiplication
@@ -142,11 +149,58 @@ plotRGB(f3, r="nir", g="r", b="g", stretch="lin", main="Zhou etal", axes=TRUE)
 
 ```
 
+
+## Feature based fusion
+
+In *feature fusion* we fuse together the features $F_k,k \in{1,2, \dots, K}$. These features can be vegetation indices like Normalized Difference Index (NDVI) or feature maps  that have been made semantically equivalent by transforming them into probabilistic $p(m,n)$, or likelihood, maps.
+
+Let us start with NDVI ($\text{NDVI}=\frac{\text{NIR}-\text{Red}}{\text{NIR}+\text{Red}}$. First compute NDVI for both UAV and S2.
+
+```{r n1}
+n_v <- (subset(v_r,"nir")-subset(v_r,"r"))/(subset(v_r,"nir")+subset(v_r,"r"))
+n_s <- (subset(s,"nir")-subset(s,"r"))/(subset(s,"nir")+subset(s,"r"))
+x11()
+par(mfrow = c(1, 2), mar = c(5, 5, 1.4, 0.2))#c(bottom, left, top, right)
+plot(n_v, main="UAV NDVI")
+plot(n_s, main="S2 NDVI")
+```
+
+How can we fuse the NDVI index? Let us take an average of the two.
+
+```{r n2}
+nf <- mean(n_v, n_s)
+x11()
+plot(nf, main="Fused NDVI")
+```
+
+Is there a difference between UAV NDVI only and the fused one? Let's evaluate the images below.
+
+```{r n3}
+x11()
+plot(n_v, main="UAV NDVI")
+x11()
+plot(nf, main="Fused NDVI")
+```
+
+## Modelling UAV reflectance
+
+Due to the cost of UAV field operations can we model and predict its reflectance given? Let's check the relationship between the two.
+
+```{r m1}
+x11()
+par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 
+plot(as.vector(subset(s,'b')),as.vector(subset(v_r,'b')), xlab='S2', ylab='W1 UAV', main="Blue band",pch=16,cex=0.75, col='blue')
+plot(as.vector(subset(s,'g')),as.vector(subset(v_r,'g')), xlab='S2', ylab='W1 UAV', main="Green band",pch=16,cex=0.75, col='green')
+plot(as.vector(subset(s,'r')),as.vector(subset(v_r,'r')), xlab='S2', ylab='W1 UAV', main="Red band",pch=16,cex=0.75, col='red')
+plot(as.vector(subset(s,'nir')),as.vector(subset(v_r,'nir')), xlab='S2', ylab='W1 UAV', main="NIR band",pch=16,cex=0.75)
+```
+
+There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?
+
 ## References
 
 Thierry Ranchin and Lucien Wald. *Data Fusion in Remote Sensing of Urban and Suburban
 Areas*, pages 193–218. Springer Netherlands, Dordrecht, 2010. ISBN 978-1-4020-4385-
-7. doi: 10:1007/978-1-4020-4385-7 11. URL http://dx:doi:org/10:1007/978-1-
-4020-4385-7 11.
+7. doi: 10:1007/978-1-4020-4385-7 11. URL https://doi.org/10.1007/978-1-4020-4385-7_11.
 
 Y. Zou, G. Li and S. Wang, "The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance," *IEEE International Conference on Information and Automation (ICIA)*, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.

@@ -9,9 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Benson Kenduiywo" />
 
-<meta name="date" content="2021-02-05" />
 
 <title>Data storage schema</title>
 
@@ -21,18 +19,34 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
-<style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -45,32 +59,7 @@ if (window.hljs) {
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
 
 <link rel="stylesheet" href="styles.css" type="text/css" />
 
@@ -81,10 +70,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -101,40 +86,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 45px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 50px;
-  margin-top: -50px;
-}
-.section h2 {
-  padding-top: 50px;
-  margin-top: -50px;
-}
-.section h3 {
-  padding-top: 50px;
-  margin-top: -50px;
-}
-.section h4 {
-  padding-top: 50px;
-  margin-top: -50px;
-}
-.section h5 {
-  padding-top: 50px;
-  margin-top: -50px;
-}
-.section h6 {
-  padding-top: 50px;
-  margin-top: -50px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -162,7 +120,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -174,7 +132,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -185,10 +143,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -200,7 +171,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -253,6 +223,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -260,6 +293,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -276,11 +319,18 @@ $(document).ready(function () {
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    <span class="fa fa-home"></span>
+        <li>
+  <a href="index.html">
+    <span class="fas fa-home"></span>
      
     Home
+  </a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fas fa-gear"></span>
+     
+    More
      
     <span class="caret"></span>
   </a>
@@ -288,31 +338,34 @@ $(document).ready(function () {
     <li>
       <a href="lesson1.html">Data storage schema</a>
     </li>
+    <li>
+      <a href="fusion.html">Image Fusion</a>
+    </li>
   </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="mailto:bensonkemboi@gmail.com">
-    <span class="fa fa-envelope fa-lg"></span>
+    <span class="fas fa-envelope fa-lg"></span>
      
   </a>
 </li>
 <li>
   <a href="http://github.com/bensonkenduiywo">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
 <li>
   <a href="https://twitter.com/bensonkenduiywo">
-    <span class="fa fa-twitter fa-lg"></span>
+    <span class="fab fa-twitter fa-lg"></span>
      
   </a>
 </li>
 <li>
   <a href="https://www.linkedin.com/in/benson-kenduiywo-1a218137">
-    <span class="fa fa-linkedin fa-lg"></span>
+    <span class="fab fa-linkedin fa-lg"></span>
      
   </a>
 </li>
@@ -321,13 +374,11 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
 <h1 class="title toc-ignore">Data storage schema</h1>
-<h4 class="author">Benson Kenduiywo</h4>
-<h4 class="date">02/05/2021</h4>
 
 </div>
 
@@ -336,28 +387,76 @@ $(document).ready(function () {
 <h2>Data storage</h2>
 <p>Remotely sensed multi-spectral data is represented by a combination of spatial position (pixel number and line number) and band. The <em>data storage scheme</em> for multi-band images is classified into the following three types, described below:</p>
 <ol style="list-style-type: decimal">
-<li>Band sequential (BSQ)</li>
-<li>Band interleaved by line (BIL),</li>
-<li>Band interleaved by pixel (BIP)</li>
+<li>Band sequential (BSQ): entire bands are stored on disk one after the other.</li>
+<li>Band interleaved by line (BIL): bands are stored line-wise.</li>
+<li>Band interleaved by pixel (BIP): for each band, gray values are stored in a pixel-wise manner.</li>
 </ol>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<p>So let’s download a Sentinel 2 multi-spectral image and go over these schema’s. We will use <code>sen2r</code> package to download the data. First install/load the package</p>
+<pre class="r"><code>rm(list=ls(all=TRUE))
+if(!require(sen2r))install.packages(&#39;sen2r&#39;)</code></pre>
+<pre><code>## Loading required package: sen2r</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;geojsonsf&#39;:
+##   method        from   
+##   print.geojson geojson</code></pre>
+<pre><code>## Welcome to sen2r. To use the package from a GUI, launch
+##  &gt; sen2r()
+## Documentation: https://sen2r.ranghetti.info
+## Help and bug report: https://github.com/ranghetti/sen2r/issues</code></pre>
+<pre class="r"><code>library(sen2r)</code></pre>
+<p>Let us use a GUI to donwload sentinel 2 data.</p>
+<pre class="r"><code>#sen2r()</code></pre>
+<p>Next lets save our login credentials by running the command <code>write_scihub_login("my_user", "my_password")</code> where ‘my_user’ is your username and ‘my_password’ the corresponding <a href="https://scihub.copernicus.eu/">scihub</a> account password. If so wish you can use an interactive GUI using the command <code>sen2r()</code> but ensure to install the following packages <code>mapedit</code>, <code>shinyFiles</code>, <code>shinydashboard</code>, and <code>shinyWidgets</code>.</p>
+<pre class="r"><code>#write_scihub_login(&quot;my_user&quot;, &quot;my_password&quot;)
+# 
+# path &lt;- getwd()
+# aoi &lt;- paste0(path,&quot;/data/JKUAT.json&quot;)
+# out_dir &lt;- paste0(path,&quot;/data/&quot;)
+# safe_dir &lt;- dir.create(paste0(path,&quot;/safe/&quot;),recursive = TRUE)
+# 
+# out1 &lt;- sen2r(
+#   gui = FALSE,
+#   extent = system.file(aoi, package = &quot;sen2r&quot;),
+#   extent_name = &#39;JKUAT&#39;,
+#   timewindow = c(&quot;2021-01-01&quot;, &quot;2021-01-12&quot;),
+#   list_prods = &quot;BOA&quot;,
+#   list_rgb = &quot;RGB832B&quot;,
+#   path_l1c = safe_dir,
+#   path_l2a = safe_dir,
+#   path_out = out_dir,
+#   clip_on_extent = TRUE,
+#   extent_as_mask = TRUE,
+#   overwrite =TRUE
+# )
+# 
+# 
+# safe_folder &lt;- tempfile(pattern = &quot;safe_&quot;)
+# out_folder_1 &lt;- tempfile(pattern = &quot;Example1_&quot;)
+# sel_tile_1 &lt;- s2tiles_kaz[sample(nrow(s2tiles_kaz),1),] %&gt;%
+#   sf::st_transform(3857)
+# sel_tile_1$tile_id
+# ## [1] &quot;40TET&quot;
+# sel_extent_1 &lt;- sf::st_centroid(sel_tile_1) %&gt;% st_buffer(5e3)
+# out1 &lt;- sen2r(
+#   gui = FALSE,
+#   extent = sel_extent_1,
+#   timewindow = c(&quot;2018-02-21&quot;, &quot;2018-03-02&quot;),
+#   list_rgb = &quot;RGB432T&quot;,
+#   path_l1c = safe_dir,
+#   path_l2a = safe_dir,
+#   path_out = out_dir,
+#   log = log_path_1 &lt;- tempfile()
+# )</code></pre>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="lesson1_files/figure-html/pressure-1.png" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Luigi Ranghetti and Mirco Boschetti and Francesco Nutini and Lorenzo Busetto (2020). sen2r: An R toolbox for automatically downloading and preprocessing Sentinel-2 satellite data. <em>Computers &amp; Geosciences</em>, 139, 104473. doi: 10.1016/j.cageo.2020.104473, URL: <a href="https://sen2r.ranghetti.info" class="uri">https://sen2r.ranghetti.info</a>.</p>
 </div>
 
+<p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
 
 
+</div>
+</div>
 
 </div>
 
@@ -365,7 +464,7 @@ $(document).ready(function () {
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
@@ -383,13 +482,39 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
