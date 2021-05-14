@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Benson Kenduiywo" />
+
+
+<title>Image Fusion</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Digital Image Processing in R</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fas fa-home"></span>
+     
+    Home
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="lesson1.html">Data storage schema</a>
+    </li>
+    <li>
+      <a href="fusion.html">Image Fusion</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="mailto:bensonkemboi@gmail.com">
+    <span class="fas fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="http://github.com/bensonkenduiywo">
+    <span class="fas fa-github fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://twitter.com/bensonkenduiywo">
+    <span class="fas fa-twitter fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://www.linkedin.com/in/benson-kenduiywo-1a218137">
+    <span class="fas fa-linkedin fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Image Fusion</h1>
+<h4 class="author">Benson Kenduiywo</h4>
+<h4 class="date">14/05/2021</h4>
+
+</div>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. <strong>Data fusion</strong>: a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application (Ranchin and Wald, 2010).</p>
+<p>The principal motivation for image fusion is to improve the quality of the information contained in the output image in a process known as synergy. A study of existing image fusion techniques and applications shows that image fusion can provide us with an output image with an improved quality. In this case, the benefits of image fusion include:</p>
+<ol style="list-style-type: decimal">
+<li>Extended range of operation.</li>
+<li>Extended spatial and temporal coverage.</li>
+<li>Reduced uncertainty.</li>
+<li>Increased reliability.</li>
+<li>Robust system performance.</li>
+<li>Compact representation of information.</li>
+</ol>
+</div>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>Load libraries, declare variables and data paths.</p>
+<pre class="r"><code>rm(list=ls(all=TRUE))    #Clears R memory
+unlink(&quot;.RData&quot;) 
+if (!require(&quot;pacman&quot;)) install.packages(&quot;pacman&quot;); library(pacman) #package manager( loads required packages/libraries in list as below if not installed they will be installed
+p_load(raster, terra)
+
+options(warn=1)
+cat(&quot;Set variables and start processing\n&quot;)</code></pre>
+<pre><code>## Set variables and start processing</code></pre>
+<pre class="r"><code>Root        &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/&#39;
+Path_out    &lt;- paste0(Root,&quot;Output/&quot;)</code></pre>
+<p>Let us load UAV and Sentinel 2 optical images that we will use.</p>
+<pre class="r"><code>path &lt;- list.files(paste0(Root,&#39;S2/interim/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
+path</code></pre>
+<pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B02.tif&quot;
+## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B03.tif&quot;
+## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B04.tif&quot;
+## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B08.tif&quot;</code></pre>
+<pre class="r"><code>s &lt;- rast(path)
+s</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 10980, 10980, 4  (nrow, ncol, nlyr)
+## resolution  : 10, 10  (x, y)
+## extent      : 3e+05, 409800, 6990220, 7100020  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## sources     : RT_T36JUR_20210418T073611_B02.tif  
+##               RT_T36JUR_20210418T073611_B03.tif  
+##               RT_T36JUR_20210418T073611_B04.tif  
+##               ... and 1 more source(s)
+## names       : RT_T36J~611_B02, RT_T36J~611_B03, RT_T36J~611_B04, RT_T36J~611_B08</code></pre>
+<pre class="r"><code>path &lt;- list.files(paste0(Root,&#39;WingtraOne/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
+path</code></pre>
+<pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_blue.tif&quot; 
+## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_green.tif&quot;
+## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif&quot;  
+## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_red.tif&quot;</code></pre>
+<pre class="r"><code>v &lt;- rast(path)
+v</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 12981, 6363, 4  (nrow, ncol, nlyr)
+## resolution  : 0.12059, 0.12059  (x, y)
+## extent      : 390445, 391212.3, 7070171, 7071736  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## sources     : mpolonjeni_05042021m3f1_transparent_reflectance_blue.tif  
+##               mpolonjeni_05042021m3f1_transparent_reflectance_green.tif  
+##               mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif  
+##               ... and 1 more source(s)
+## names       : mpolonj~ce_blue, mpolonj~e_green, mpolonj~nce_nir, mpolonj~nce_red</code></pre>
+<p>Now check image properties and assign meaningful names to its bands.</p>
+<pre class="r"><code>#Resolution
+res(s)</code></pre>
+<pre><code>## [1] 10 10</code></pre>
+<pre class="r"><code>#Extents
+ext(s)</code></pre>
+<pre><code>## SpatExtent : 3e+05, 409800, 6990220, 7100020 (xmin, xmax, ymin, ymax)</code></pre>
+<pre class="r"><code>#image dimensions
+dim(s)</code></pre>
+<pre><code>## [1] 10980 10980     4</code></pre>
+<pre class="r"><code>#Number of bands
+nlyr(s)</code></pre>
+<pre><code>## [1] 4</code></pre>
+<pre class="r"><code>names(s) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;r&quot;, &quot;nir&quot;)
+s</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 10980, 10980, 4  (nrow, ncol, nlyr)
+## resolution  : 10, 10  (x, y)
+## extent      : 3e+05, 409800, 6990220, 7100020  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## sources     : RT_T36JUR_20210418T073611_B02.tif  
+##               RT_T36JUR_20210418T073611_B03.tif  
+##               RT_T36JUR_20210418T073611_B04.tif  
+##               ... and 1 more source(s)
+## names       : b, g, r, nir</code></pre>
+<pre class="r"><code>res(v)</code></pre>
+<pre><code>## [1] 0.12059 0.12059</code></pre>
+<pre class="r"><code>ext(v)</code></pre>
+<pre><code>## SpatExtent : 390445.0352, 391212.34937, 7070171.12052, 7071736.49931 (xmin, xmax, ymin, ymax)</code></pre>
+<pre class="r"><code>dim(v)</code></pre>
+<pre><code>## [1] 12981  6363     4</code></pre>
+<pre class="r"><code>names(v) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;nir&quot;, &quot;r&quot;)
+v</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 12981, 6363, 4  (nrow, ncol, nlyr)
+## resolution  : 0.12059, 0.12059  (x, y)
+## extent      : 390445, 391212.3, 7070171, 7071736  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## sources     : mpolonjeni_05042021m3f1_transparent_reflectance_blue.tif  
+##               mpolonjeni_05042021m3f1_transparent_reflectance_green.tif  
+##               mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif  
+##               ... and 1 more source(s)
+## names       : b, g, nir, r</code></pre>
+<p>Crop Sentinel 2 image to UAV image extents.</p>
+<pre class="r"><code>s &lt;- crop(s, ext(v), snap=&quot;near&quot;)</code></pre>
+<p>Display the images side by side.</p>
+<pre class="r"><code>x11()
+par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) #c(bottom, left, top, right)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;S2&quot;)
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;UAV&quot;)</code></pre>
+<p><img src="fusion_files/figure-html/d5-1.png" width="672" /></p>
+<p>First let us conduct a spectral fusion of S2 and UAV images. To do this we have to resample UAV image to S2 extents.</p>
+<pre class="r"><code>v_r &lt;- resample(v, s, method=&#39;bilinear&#39;)</code></pre>
+<p>Fuse the two images by multiplication and display it against the original ones.</p>
+<pre class="r"><code>#Fuse by multiplication
+f1 &lt;- s * v_r
+f1</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 157, 76, 4  (nrow, ncol, nlyr)
+## resolution  : 10, 10  (x, y)
+## extent      : 390450, 391210, 7070170, 7071740  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## source      : memory 
+## names       :            b,            g,            r,          nir 
+## min values  : 0.0002068561, 0.0005442272, 0.0026425113, 0.0019369536 
+## max values  :   0.01279990,   0.01698387,   0.05305753,   0.04016119</code></pre>
+<pre class="r"><code>#Display fused image alongside original UAV
+x11()
+par(mfrow = c(1, 3),mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;UAV&quot;, cex.axis=0.7)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;S2&quot;, cex.axis=0.7)
+plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;Fused_multi&quot;, cex.axis=0.7)</code></pre>
+<p><img src="fusion_files/figure-html/d7-1.png" width="672" /></p>
+<p>What about mean fusion?</p>
+<pre class="r"><code>#Fuse by multiplication
+f2 &lt;- mean(s, v_r)
+f2</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 157, 76, 4  (nrow, ncol, nlyr)
+## resolution  : 10, 10  (x, y)
+## extent      : 390450, 391210, 7070170, 7071740  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## source      : memory 
+## names       :          b,          g,          r,        nir 
+## min values  : 0.01532078, 0.02351120, 0.05345298, 0.06345835 
+## max values  :  0.1225800,  0.1548688,  0.3631510,  0.2155108</code></pre>
+<pre class="r"><code>#Display fused image alongside original UAV
+x11()
+par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV&quot;, axes=TRUE, cex.axis=0.7)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;S2&quot;, axes=TRUE, cex.axis=0.7)
+plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mult&quot;, axes=TRUE, cex.axis=0.7)
+plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mean&quot;, axes=TRUE, cex.axis=0.7)</code></pre>
+<p><img src="fusion_files/figure-html/d8-1.png" width="672" /></p>
+<p>Let us finally follow the fusion approach in <a href="https://ieeexplore.ieee.org/document/8812312">Zou et al (2018)</a>.</p>
+<pre class="r"><code>f3 = (s/v_r)*v_r
+x11()
+par(mfrow = c(2, 3), mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV&quot;, axes=TRUE)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;S2&quot;, axes=TRUE)
+plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mult&quot;, axes=TRUE)
+plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mean&quot;, axes=TRUE)
+plotRGB(f3, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Zhou etal&quot;, axes=TRUE)</code></pre>
+<p><img src="fusion_files/figure-html/d9-1.png" width="672" /></p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Thierry Ranchin and Lucien Wald. <em>Data Fusion in Remote Sensing of Urban and Suburban Areas</em>, pages 193–218. Springer Netherlands, Dordrecht, 2010. ISBN 978-1-4020-4385- 7. doi: 10:1007/978-1-4020-4385-7 11. URL <a href="http://dx:doi:org/10:1007/978-1-" class="uri">http://dx:doi:org/10:1007/978-1-</a> 4020-4385-7 11.</p>
+<p>Y. Zou, G. Li and S. Wang, “The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance,” <em>IEEE International Conference on Information and Automation (ICIA)</em>, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

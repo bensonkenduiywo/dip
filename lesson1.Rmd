@@ -9,22 +9,108 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Data storage
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Remotely sensed multi-spectral data is represented by a combination of spatial position (pixel number and line number) and band. The _data storage scheme_ for multi-band images is classified into the following three types, described below:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+1. Band sequential (BSQ): entire bands are stored on disk one after the other.
+2. Band interleaved by line (BIL): bands are stored line-wise.
+3. Band interleaved by pixel (BIP): for each band, gray values are stored in a pixel-wise manner.
 
-```{r cars}
-summary(cars)
+So let's download a Sentinel 2 multi-spectral image and go over these schema's. We will use `sen2r` package to download the data. First install/load the package
+
+```{r s1}
+rm(list=ls(all=TRUE))
+if(!require(sen2r))install.packages('sen2r')
+library(sen2r)
 ```
 
-## Including Plots
+Let us use a GUI to donwload sentinel 2 data.
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r s2}
+sen2r()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Next lets save our login credentials by running the command `write_scihub_login("my_user", "my_password")` where 'my_user' is your username and 'my_password' the corresponding [scihub](https://scihub.copernicus.eu/) account password. If so wish you can use an interactive GUI using the command `sen2r()` but ensure to install the following packages `mapedit`, `shinyFiles`, `shinydashboard`, and `shinyWidgets`. 
+
+```{r s2}
+#write_scihub_login("my_user", "my_password")
+
+path <- getwd()
+aoi <- paste0(path,"/data/JKUAT.json")
+out_dir <- paste0(path,"/data/")
+safe_dir <- dir.create(paste0(path,"/safe/"),recursive = TRUE)
+
+out1 <- sen2r(
+  gui = FALSE,
+  extent = system.file(aoi, package = "sen2r"),
+  extent_name = 'JKUAT',
+  timewindow = c("2021-01-01", "2021-01-12"),
+  list_prods = "BOA",
+  list_rgb = "RGB832B",
+  path_l1c = safe_dir,
+  path_l2a = safe_dir,
+  path_out = out_dir,
+  clip_on_extent = TRUE,
+  extent_as_mask = TRUE,
+  overwrite =TRUE
+)
+
+
+safe_folder <- tempfile(pattern = "safe_")
+out_folder_1 <- tempfile(pattern = "Example1_")
+sel_tile_1 <- s2tiles_kaz[sample(nrow(s2tiles_kaz),1),] %>%
+  sf::st_transform(3857)
+sel_tile_1$tile_id
+## [1] "40TET"
+sel_extent_1 <- sf::st_centroid(sel_tile_1) %>% st_buffer(5e3)
+out1 <- sen2r(
+  gui = FALSE,
+  extent = sel_extent_1,
+  timewindow = c("2018-02-21", "2018-03-02"),
+  list_rgb = "RGB432T",
+  path_l1c = safe_dir,
+  path_l2a = safe_dir,
+  path_out = out_dir,
+  log = log_path_1 <- tempfile()
+)
+
+```
+
+
+```{r}
+library(RGISTools)
+sres <- senSearch(startDate = as.Date("2021-01-01","%Y-%m-%d"),
+endDate = as.Date("2021-01-10","%Y-%m-%d"),
+platform = "Sentinel-2",
+extent = sf::st_read("./data/JKUAT.kmz"),
+product = "S2MSI1C",
+username = "bensonkemboi",
+password = "Roseflower#3700")
+
+# filtering the path R094 where Navarre is located
+names(sres)
+sres.sen.R094 <- sres[grepl("R094", names(sres))]
+names(sres.sen.R094)
+# list the dates in sres
+senGetDates(names(sres.sen.R094),format="%Y%j")
+wdir <- file.path(tempdir(),"Path_for_downloading_folder")
+# donwload the imagery
+senDownload(searchres = sres.sen.R094,
+username = "username",
+password = "password",
+AppRoot = wdir,
+unzip = TRUE)
+wdir.sen.unzip <- file.path(wdir,"Sentinel","unzip")
+files.sen.unzip<-list.files(wdir.sen.unzip,
+pattern = "\\TCI.jp2$",
+full.names = TRUE,
+recursive = TRUE)
+img.sen.rgb<-stack(files.sen.unzip[1])
+plotRGB(img.sen.rgb)
+```
+
+
+## References
+
+Luigi Ranghetti and Mirco Boschetti and Francesco Nutini and Lorenzo Busetto (2020). sen2r: An R toolbox for automatically downloading and preprocessing Sentinel-2 satellite data. _Computers & Geosciences_, 139, 104473. doi: 10.1016/j.cageo.2020.104473, URL: https://sen2r.ranghetti.info.

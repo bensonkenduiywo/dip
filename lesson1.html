@@ -286,12 +286,6 @@ $(document).ready(function () {
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="ex1_intro2R.html">Manipulating data in R Exercise</a>
-    </li>
-    <li>
-      <a href="ex1_intro2R_answers.html">Manipulating data in R Solutions</a>
-    </li>
-    <li>
       <a href="lesson1.html">Data storage schema</a>
     </li>
   </ul>
@@ -338,10 +332,14 @@ $(document).ready(function () {
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<div id="data-storage" class="section level2">
+<h2>Data storage</h2>
+<p>Remotely sensed multi-spectral data is represented by a combination of spatial position (pixel number and line number) and band. The <em>data storage scheme</em> for multi-band images is classified into the following three types, described below:</p>
+<ol style="list-style-type: decimal">
+<li>Band sequential (BSQ)</li>
+<li>Band interleaved by line (BIL),</li>
+<li>Band interleaved by pixel (BIP)</li>
+</ol>
 <pre class="r"><code>summary(cars)</code></pre>
 <pre><code>##      speed           dist       
 ##  Min.   : 4.0   Min.   :  2.00  

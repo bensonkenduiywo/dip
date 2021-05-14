@@ -12,7 +12,8 @@ navbar:
       menu:
         - text: "Data storage schema"
           href: lesson1.html
-                                         
+        - text: "Image Fusion"
+          href: fusion.html                                         
   right:
     - icon: fa-envelope fa-lg
       href: mailto:bensonkemboi@gmail.com

@@ -1,0 +1,152 @@
+---
+title: "Image Fusion"
+author: "Benson Kenduiywo"
+date: "14/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. **Data fusion**: a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application (Ranchin and Wald, 2010).
+
+The principal motivation for image fusion is to improve the quality of the information
+contained in the output image in a process known as synergy. A study of existing image
+fusion techniques and applications shows that image fusion can provide us with an output
+image with an improved quality. In this case, the benefits of image fusion include:
+
+1. Extended range of operation.
+2. Extended spatial and temporal coverage.
+3. Reduced uncertainty.
+4. Increased reliability.
+5. Robust system performance.
+6. Compact representation of information.
+
+## Data
+
+Load libraries, declare variables and data paths.
+
+```{r d1, message=FALSE}
+rm(list=ls(all=TRUE))    #Clears R memory
+unlink(".RData") 
+if (!require("pacman")) install.packages("pacman"); library(pacman) #package manager( loads required packages/libraries in list as below if not installed they will be installed
+p_load(raster, terra)
+
+options(warn=1)
+cat("Set variables and start processing\n")
+Root 		<- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/'
+Path_out    <- paste0(Root,"Output/")
+
+```
+
+Let us load UAV and Sentinel 2 optical images that we will use. 
+
+```{r d2}
+path <- list.files(paste0(Root,'S2/interim/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
+path
+s <- rast(path)
+s
+path <- list.files(paste0(Root,'WingtraOne/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
+path
+v <- rast(path)
+v
+```
+
+Now check image properties and assign meaningful names to its bands.
+
+```{r d3}
+#Resolution
+res(s)
+#Extents
+ext(s)
+#image dimensions
+dim(s)
+#Number of bands
+nlyr(s)
+names(s) <- c("b", "g","r", "nir")
+s
+res(v)
+ext(v)
+dim(v)
+names(v) <- c("b", "g","nir", "r")
+v
+```
+
+Crop Sentinel 2 image to UAV image extents.
+
+```{r d4}
+s <- crop(s, ext(v), snap="near")
+```
+
+Display the images side by side.
+
+```{r d5, message = FALSE}
+x11()
+par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) #c(bottom, left, top, right)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="S2")
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="UAV")
+
+```
+
+First let us conduct a spectral fusion of S2 and UAV images. To do this we have to resample UAV image to S2 extents.
+
+```{r d6}
+v_r <- resample(v, s, method='bilinear')
+```
+
+Fuse the two images by multiplication and display it against the original ones.
+
+```{r d7}
+#Fuse by multiplication
+f1 <- s * v_r
+f1
+#Display fused image alongside original UAV
+x11()
+par(mfrow = c(1, 3),mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="UAV", cex.axis=0.7)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="S2", cex.axis=0.7)
+plotRGB(f1, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="Fused_multi", cex.axis=0.7)
+
+```
+
+What about mean fusion?
+
+```{r d8}
+#Fuse by multiplication
+f2 <- mean(s, v_r)
+f2
+#Display fused image alongside original UAV
+x11()
+par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(v, r="nir", g="r", b="g", stretch="lin",  main="UAV", axes=TRUE, cex.axis=0.7)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", main="S2", axes=TRUE, cex.axis=0.7)
+plotRGB(f1, r="nir", g="r", b="g", stretch="lin", main="Fused_mult", axes=TRUE, cex.axis=0.7)
+plotRGB(f2, r="nir", g="r", b="g", stretch="lin", main="Fused_mean", axes=TRUE, cex.axis=0.7)
+
+```
+
+Let us finally follow the fusion approach in [Zou et al (2018)](https://ieeexplore.ieee.org/document/8812312).
+
+```{r d9}
+f3 = (s/v_r)*v_r
+x11()
+par(mfrow = c(2, 3), mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(v, r="nir", g="r", b="g", stretch="lin",  main="UAV", axes=TRUE)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", main="S2", axes=TRUE)
+plotRGB(f1, r="nir", g="r", b="g", stretch="lin", main="Fused_mult", axes=TRUE)
+plotRGB(f2, r="nir", g="r", b="g", stretch="lin", main="Fused_mean", axes=TRUE)
+plotRGB(f3, r="nir", g="r", b="g", stretch="lin", main="Zhou etal", axes=TRUE)
+
+```
+
+## References
+
+Thierry Ranchin and Lucien Wald. *Data Fusion in Remote Sensing of Urban and Suburban
+Areas*, pages 193–218. Springer Netherlands, Dordrecht, 2010. ISBN 978-1-4020-4385-
+7. doi: 10:1007/978-1-4020-4385-7 11. URL http://dx:doi:org/10:1007/978-1-
+4020-4385-7 11.
+
+Y. Zou, G. Li and S. Wang, "The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance," *IEEE International Conference on Information and Automation (ICIA)*, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.

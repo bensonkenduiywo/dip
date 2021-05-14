@@ -17,7 +17,8 @@ The goal of this tutorial is to introduce practical aspects of digital image ana
 A section of the tutorials introduces the basics of data manipulation in R for the novice users while the other sections contains tutorials related to DIP. The tutorial is organized as follows:
 
 1. [Manipulating data in R](https://bensonkenduiywo.github.io/intro2geostats/ex1_intro2R.html).
-2. [Data storage schema: Excercise 2](lesson1.html).
+2. [Data storage schema](lesson1.html).
+3. [Image fusion](fusion.html)
 
 
 ### Resources
