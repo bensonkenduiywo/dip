@@ -89,9 +89,11 @@ Display the images side by side.
 
 ```{r d5, message = FALSE}
 x11()
-par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) #c(bottom, left, top, right)
-plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="S2")
-plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="UAV")
+par(mfrow = c(1, 2)) #c(bottom, left, top, right)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="S2")
+box()
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="UAV")
+box()
 
 ```
 
@@ -113,10 +115,12 @@ f1
 #Display fused image alongside original UAV
 x11()
 par(mfrow = c(1, 3),mar = c(4, 5, 1.4, 0.2)) 
-plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="UAV", cex.axis=0.7)
-plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="S2", cex.axis=0.7)
-plotRGB(f1, r="nir", g="r", b="g", stretch="lin", axes = TRUE, main="Fused_multi", cex.axis=0.7)
-
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="UAV", cex.axis=0.7)
+box()
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="S2", cex.axis=0.7)
+box()
+plotRGB(f1, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="Fused_multi", cex.axis=0.7)
+box()
 ```
 
 What about mean fusion (i.e. taking the mean of each pixel's reflectance in both UAV and S2)?
@@ -128,10 +132,14 @@ f2
 #Display fused image alongside original UAV
 x11()
 par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 
-plotRGB(v, r="nir", g="r", b="g", stretch="lin",  main="UAV", axes=TRUE, cex.axis=0.7)
-plotRGB(s, r="nir", g="r", b="g", stretch="lin", main="S2", axes=TRUE, cex.axis=0.7)
-plotRGB(f1, r="nir", g="r", b="g", stretch="lin", main="Fused_mult", axes=TRUE, cex.axis=0.7)
-plotRGB(f2, r="nir", g="r", b="g", stretch="lin", main="Fused_mean", axes=TRUE, cex.axis=0.7)
+plotRGB(v, r="nir", g="r", b="g", stretch="lin",  main="UAV", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", main="S2", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f1, r="nir", g="r", b="g", stretch="lin", main="Fused_mult", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f2, r="nir", g="r", b="g", stretch="lin", main="Fused_mean", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
 
 ```
 
@@ -141,11 +149,16 @@ Let us finally follow the fusion approach in [Zou et al (2018)](https://ieeexplo
 f3 = (s/v_r)*v_r
 x11()
 par(mfrow = c(2, 3), mar = c(4, 5, 1.4, 0.2)) 
-plotRGB(v, r="nir", g="r", b="g", stretch="lin",  main="UAV", axes=TRUE)
-plotRGB(s, r="nir", g="r", b="g", stretch="lin", main="S2", axes=TRUE)
-plotRGB(f1, r="nir", g="r", b="g", stretch="lin", main="Fused_mult", axes=TRUE)
-plotRGB(f2, r="nir", g="r", b="g", stretch="lin", main="Fused_mean", axes=TRUE)
-plotRGB(f3, r="nir", g="r", b="g", stretch="lin", main="Zhou etal", axes=TRUE)
+plotRGB(v, r="nir", g="r", b="g", stretch="lin",  main="UAV", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", main="S2", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f1, r="nir", g="r", b="g", stretch="lin", main="Fused_mult", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f2, r="nir", g="r", b="g", stretch="lin", main="Fused_mean", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f3, r="nir", g="r", b="g", stretch="lin", main="Zhou etal", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
 
 ```
 

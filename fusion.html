@@ -493,9 +493,11 @@ v</code></pre>
 <pre class="r"><code>s &lt;- crop(s, ext(v), snap=&quot;near&quot;)</code></pre>
 <p>Display the images side by side.</p>
 <pre class="r"><code>x11()
-par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) #c(bottom, left, top, right)
-plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;S2&quot;)
-plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;UAV&quot;)</code></pre>
+par(mfrow = c(1, 2)) #c(bottom, left, top, right)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;S2&quot;)
+box()
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;UAV&quot;)
+box()</code></pre>
 <p><img src="fusion_files/figure-html/d5-1.png" width="672" /></p>
 <p>First let us conduct a spectral fusion of S2 and UAV images. To do this we have to resample UAV image to S2 extents.</p>
 <pre class="r"><code>v_r &lt;- resample(v, s, method=&#39;bilinear&#39;)
@@ -520,9 +522,12 @@ f1</code></pre>
 <pre class="r"><code>#Display fused image alongside original UAV
 x11()
 par(mfrow = c(1, 3),mar = c(4, 5, 1.4, 0.2)) 
-plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;UAV&quot;, cex.axis=0.7)
-plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;S2&quot;, cex.axis=0.7)
-plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, main=&quot;Fused_multi&quot;, cex.axis=0.7)</code></pre>
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;UAV&quot;, cex.axis=0.7)
+box()
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;S2&quot;, cex.axis=0.7)
+box()
+plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;Fused_multi&quot;, cex.axis=0.7)
+box()</code></pre>
 <p><img src="fusion_files/figure-html/d7-1.png" width="672" /></p>
 <p>What about mean fusion (i.e. taking the mean of each pixel’s reflectance in both UAV and S2)?</p>
 <pre class="r"><code>#Fuse by multiplication
@@ -540,20 +545,29 @@ f2</code></pre>
 <pre class="r"><code>#Display fused image alongside original UAV
 x11()
 par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 
-plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV&quot;, axes=TRUE, cex.axis=0.7)
-plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;S2&quot;, axes=TRUE, cex.axis=0.7)
-plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mult&quot;, axes=TRUE, cex.axis=0.7)
-plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mean&quot;, axes=TRUE, cex.axis=0.7)</code></pre>
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;S2&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mult&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mean&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()</code></pre>
 <p><img src="fusion_files/figure-html/d8-1.png" width="672" /></p>
 <p>Let us finally follow the fusion approach in <a href="https://ieeexplore.ieee.org/document/8812312">Zou et al (2018)</a>.</p>
 <pre class="r"><code>f3 = (s/v_r)*v_r
 x11()
 par(mfrow = c(2, 3), mar = c(4, 5, 1.4, 0.2)) 
-plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV&quot;, axes=TRUE)
-plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;S2&quot;, axes=TRUE)
-plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mult&quot;, axes=TRUE)
-plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mean&quot;, axes=TRUE)
-plotRGB(f3, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Zhou etal&quot;, axes=TRUE)</code></pre>
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;S2&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f1, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mult&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f2, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Fused_mean&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(f3, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Zhou etal&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
+box()</code></pre>
 <p><img src="fusion_files/figure-html/d9-1.png" width="672" /></p>
 </div>
 <div id="feature-based-fusion" class="section level2">
