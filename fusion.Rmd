@@ -197,6 +197,10 @@ plot(as.vector(subset(s,'nir')),as.vector(subset(v_r,'nir')), xlab='S2', ylab='W
 
 There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?
 
+## Spatial-spectral fusion
+
+Previously we downsampled the UAV image in order to conduct fusion. While this reduces spectral variability it destroys spatial resolution. Therefore, in this section we will first upsample the Satellite image to match UAV spatial resolution and then proceed to condut image fusion. This way, we will improve both spatial and spectral information of Sentinel 2 image. 
+
 ## References
 
 Thierry Ranchin and Lucien Wald. *Data Fusion in Remote Sensing of Urban and Suburban
