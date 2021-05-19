@@ -429,12 +429,16 @@ s</code></pre>
 ##               ... and 1 more source(s)
 ## names       : RT_T36J~611_B02, RT_T36J~611_B03, RT_T36J~611_B04, RT_T36J~611_B08</code></pre>
 <pre class="r"><code>path &lt;- list.files(paste0(Root,&#39;WingtraOne/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
-path</code></pre>
+#reorder the bands
+paths &lt;- path
+paths[3] &lt;- path[4]
+paths[4] &lt;- path[3]
+paths</code></pre>
 <pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_blue.tif&quot; 
 ## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_green.tif&quot;
-## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif&quot;  
-## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_red.tif&quot;</code></pre>
-<pre class="r"><code>v &lt;- rast(path)
+## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_red.tif&quot;  
+## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif&quot;</code></pre>
+<pre class="r"><code>v &lt;- rast(paths)
 v</code></pre>
 <pre><code>## class       : SpatRaster 
 ## dimensions  : 12981, 6363, 4  (nrow, ncol, nlyr)
@@ -443,9 +447,9 @@ v</code></pre>
 ## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
 ## sources     : mpolonjeni_05042021m3f1_transparent_reflectance_blue.tif  
 ##               mpolonjeni_05042021m3f1_transparent_reflectance_green.tif  
-##               mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif  
+##               mpolonjeni_05042021m3f1_transparent_reflectance_red.tif  
 ##               ... and 1 more source(s)
-## names       : mpolonj~ce_blue, mpolonj~e_green, mpolonj~nce_nir, mpolonj~nce_red</code></pre>
+## names       : mpolonj~ce_blue, mpolonj~e_green, mpolonj~nce_red, mpolonj~nce_nir</code></pre>
 <p>Now check image properties and assign meaningful names to its bands.</p>
 <pre class="r"><code>#Resolution
 res(s)</code></pre>
@@ -477,7 +481,7 @@ s</code></pre>
 <pre><code>## SpatExtent : 390445.0352, 391212.34937, 7070171.12052, 7071736.49931 (xmin, xmax, ymin, ymax)</code></pre>
 <pre class="r"><code>dim(v)</code></pre>
 <pre><code>## [1] 12981  6363     4</code></pre>
-<pre class="r"><code>names(v) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;nir&quot;, &quot;r&quot;)
+<pre class="r"><code>names(v) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;r&quot;, &quot;nir&quot;)
 v</code></pre>
 <pre><code>## class       : SpatRaster 
 ## dimensions  : 12981, 6363, 4  (nrow, ncol, nlyr)
@@ -486,9 +490,9 @@ v</code></pre>
 ## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
 ## sources     : mpolonjeni_05042021m3f1_transparent_reflectance_blue.tif  
 ##               mpolonjeni_05042021m3f1_transparent_reflectance_green.tif  
-##               mpolonjeni_05042021m3f1_transparent_reflectance_nir.tif  
+##               mpolonjeni_05042021m3f1_transparent_reflectance_red.tif  
 ##               ... and 1 more source(s)
-## names       : b, g, nir, r</code></pre>
+## names       : b, g, r, nir</code></pre>
 <p>Crop Sentinel 2 image to UAV image extents.</p>
 <pre class="r"><code>s &lt;- crop(s, ext(v), snap=&quot;near&quot;)</code></pre>
 <p>Display the images side by side.</p>
@@ -517,8 +521,8 @@ f1</code></pre>
 ## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
 ## source      : memory 
 ## names       :            b,            g,            r,          nir 
-## min values  : 0.0002068561, 0.0005442272, 0.0026425113, 0.0019369536 
-## max values  :   0.01279990,   0.01698387,   0.05305753,   0.04016119</code></pre>
+## min values  : 0.0002068561, 0.0005442272, 0.0003042399, 0.0094109712 
+## max values  :   0.01279990,   0.01698387,   0.02435488,   0.18333833</code></pre>
 <pre class="r"><code>#Display fused image alongside original UAV
 x11()
 par(mfrow = c(1, 3),mar = c(4, 5, 1.4, 0.2)) 
@@ -540,8 +544,8 @@ f2</code></pre>
 ## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
 ## source      : memory 
 ## names       :          b,          g,          r,        nir 
-## min values  : 0.01532078, 0.02351120, 0.05345298, 0.06345835 
-## max values  :  0.1225800,  0.1548688,  0.3631510,  0.2155108</code></pre>
+## min values  : 0.01532078, 0.02351120, 0.01861056, 0.09712517 
+## max values  :  0.1225800,  0.1548688,  0.1717744,  0.4470450</code></pre>
 <pre class="r"><code>#Display fused image alongside original UAV
 x11()
 par(mfrow = c(2, 2), mar = c(4, 5, 1.4, 0.2)) 

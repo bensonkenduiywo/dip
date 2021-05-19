@@ -54,8 +54,12 @@ path
 s <- rast(path)
 s
 path <- list.files(paste0(Root,'WingtraOne/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
-path
-v <- rast(path)
+#reorder the bands
+paths <- path
+paths[3] <- path[4]
+paths[4] <- path[3]
+paths
+v <- rast(paths)
 v
 ```
 
@@ -75,7 +79,7 @@ s
 res(v)
 ext(v)
 dim(v)
-names(v) <- c("b", "g","nir", "r")
+names(v) <- c("b", "g","r", "nir")
 v
 ```
 
