@@ -94,18 +94,22 @@ Display the images side by side.
 ```{r d5, message = FALSE}
 x11()
 par(mfrow = c(1, 2)) #c(bottom, left, top, right)
-plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="S2")
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="S2", cex.axis=0.5)
 box()
-plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="UAV")
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="UAV", cex.axis=0.5)
 box()
 
 ```
 
-First let us conduct a spectral fusion of S2 and UAV images. To do this we have to resample UAV image to S2 extents.
+First let us conduct a spectral fusion of S2 and UAV images. To do this we have to resample UAV image to S2 extents and another to one to 1 m.
 
 ```{r d6}
 v_r <- resample(v, s, method='bilinear')
 ext(v_r) == ext(s)
+temp <-rast(nrow=1570,ncol=760,ext(s)) #empty object to upscale UAV to 1 m resolution
+res(temp) 
+v1 <- resample(v, temp, method='bilinear')
+res(v1) 
 ```
 
 ## Pixel fusion
@@ -166,6 +170,7 @@ box()
 
 ```
 
+There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?
 
 ## Feature based fusion
 
@@ -199,9 +204,12 @@ x11()
 plot(nf, main="Fused NDVI")
 ```
 
-## Modelling UAV reflectance
+## Modelling S2 and UAV reflectance
 
-Due to the cost of UAV field operations can we model and predict its reflectance given? Let's check the relationship between the two.
+1. Can we improve the resolution of S2 using UAV?
+2. Can we predict UAV reflectance in places not imaged by the drones?
+
+Let's check the relationship between the two.
 
 ```{r m1}
 x11()
@@ -212,7 +220,163 @@ plot(as.vector(subset(s,'r')),as.vector(subset(v_r,'r')), xlab='S2', ylab='W1 UA
 plot(as.vector(subset(s,'nir')),as.vector(subset(v_r,'nir')), xlab='S2', ylab='W1 UAV', main="NIR band",pch=16,cex=0.75)
 ```
 
-There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?
+Lets create sample points from S2 (10 m resolution) and upscaled UAV (10 m resolution)  and use them to create a model that we can predict S2 reflectance based on UAV 1 m resolution. Essentially what we are doing here is to create a model that can predict S2 reflectance at a resolution of 1 m.
+
+```{r m2}
+set.seed(530)
+x11()
+points <- spatSample(v_r, 1500, "random", as.points=T, na.rm=T, values=F)
+plotRGB(v_r, r="nir", g="r", b="g", stretch="lin",  main="UAV+sampling points", axes=T, mar = c(4, 5, 1.4, 0.2))
+plot(points,add=T)
+
+```
+
+Now extract reflectance values from the two images.
+
+```{r m3}
+s2_p <- extract(s, points, drop=F)
+head(s2_p)
+vr_p <- extract(v_r, points, drop=F)
+head(vr_p)
+```
+
+Create a model
+
+```{r m4}
+data <- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
+head(data)
+# Plot the data
+plot(S2.b~UAV.b, data=data, pch=16)
+# Create a linear regression model
+l.model <- lm(S2.b~UAV.b, data=data)
+# Add the fitted line
+abline(l.model, col="red")
+
+
+```
+
+Looks like the relation within the blue band is not linear. Let's try a non-linear SVm model.
+
+```{r m5, message=FALSE}
+#SVM
+library(e1071)
+svm.model <- svm(S2.b~UAV.b, data=data)
+svm.pred <- predict(svm.model, data)
+#SVM
+library(randomForest)
+rfmod <- randomForest(S2.b~UAV.b, data=data)
+rf.pred <- predict(rfmod, data)
+x11()
+plot(S2.b~UAV.b,data, pch=16)
+points(data$S2.b, svm.pred, col = "blue", pch=4)
+points(data$S2.b, rf.pred, col = "red", pch=4)
+legend("topright",c("Data","SVM","RF"),pch= c(16, 4),col=c("black", "blue","red"))
+
+```
+
+SVM and RF models have better characterized the relationship between S2 and UAV blue bands. Let predict high resolution S2 band from existing UAV.
+
+```{r m6}
+UAV <- subset(v1,'b')
+names(UAV) <-'UAV.b'
+s2h.b <- predict(UAV, rfmod, na.rm=T, progress='window')
+
+s2h.svm <- predict(UAV, svm.model, na.rm=T, progress='window')
+
+x11()
+par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) 
+plot(s2h.svm,  main="svm S2 1m Blue band")
+plot(s2h.b, main="RF S2 1m Blue band")
+
+
+# #parallel processing in raster
+# UAv <- raster(UAV)
+# library(snow)
+# startTime <- Sys.time() 
+# cat("Start time", format(startTime),"\n")
+# beginCluster()
+#  r4 <- predict(UAV, rfmod,na.rm=T)
+# endCluster()
+# timeDiff <- Sys.time() - startTime
+# cat("\n Processing time", format(timeDiff), "\n")
+
+```
+
+
+But how do we know if this predictions are accurate? We can plot predicted vs actual and also compute RMSE and MAPE using training data. MAPE is given as:
+
+```{r mape}
+MAPE <- function (y_pred, y_true){
+    MAPE <- mean(abs((y_true - y_pred)/y_true))
+    return(MAPE*100)
+}
+```
+
+and RMSE,
+
+```{r rmse}
+rmse <- function(error){
+  sqrt(mean(error^2))
+}
+```
+
+So lets compute MAPE and RMSE for both methods.
+
+```{r m7}
+svm.rmse <- rmse(svm.pred-data$S2.b)
+svm.rmse
+rf.rmse <- rmse(rf.pred-data$S2.b)
+rf.rmse
+svm.mape <- MAPE(svm.pred, data$S2.b)
+svm.mape
+rf.mape <- MAPE(rf.pred, data$S2.b)
+rf.mape
+```
+
+Form the validations Random Forest gives better prediction than Support Vector machines because it has low percentage and RMSE error. In that case we can adopt the high resolution S2 image predicted by RF and fuse it with UAV image at 1m resolution. Note that we only predict the blue band, we can model and predict the other bands and then fuse them.
+
+```{r m8}
+#Green band
+rfmod <- randomForest(S2.g~UAV.g, data=data)
+UAV=subset(v1,'g')
+names(UAV) <-'UAV.g'
+s2h.g <- predict(UAV, rfmod, na.rm=T, progress='window')
+#red band
+rfmod <- randomForest(S2.r~UAV.r, data=data)
+UAV=subset(v1,'r')
+names(UAV) <-'UAV.r'
+s2h.r <- predict(UAV, rfmod, na.rm=T, progress='window')
+#NIR band
+rfmod <- randomForest(S2.nir~UAV.nir, data=data)
+UAV=subset(v1,'nir')
+names(UAV) <-'UAV.nir'
+s2h.nir <- predict(UAV, rfmod, na.rm=T, progress='window')
+
+#Stack them
+s2h <- stack(x=c(s2h.b,s2h.g,s2h.r,s2h.nir))
+names(s2h) <- c("b", "g","r", "nir")
+s2h
+```
+
+However, the predicted reflectance ranges in all bands except NIR as very low. Why could this be so? 
+Now lets create a high resolution fused image using Zhou's approach.
+
+
+```{r m9}
+s2h.fused <- (rast(s2h)/v1)*v1
+s2h.fused
+
+x11()
+par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) 
+plotRGB(s2h.fused, r="nir", g="r", b="g", stretch="lin",  main="UAV+S2 high res", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", main="UAV", axes=T, mar = c(4, 5, 1.4, 0.2))
+box()
+```
+
+The other would be to upsample the uAV image to 10 m resolution and use S2 to predict UAV (low resolution of 10 m) in areas not covered by the drone and use it in fusion...
+However this approach would require consideration of similar land-cover. For instance, we can not train the model in an area with different land-cover say cropland and predict in another area with say Forest. Food for thought.
+
 
 ## Spatial-spectral fusion
 
