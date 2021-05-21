@@ -204,7 +204,11 @@ x11()
 plot(nf, main="Fused NDVI")
 ```
 
-## Modelling S2 and UAV reflectance
+## Spatial-spectral fusion
+
+Previously we upsampled the UAV image in order to conduct fusion. While this reduces spectral variability it destroys spatial resolution. Therefore, in this section we will first donwsample the Satellite image to match UAV spatial resolution and then proceed to conduct image fusion. This way, we will improve both spatial and spectral information of Sentinel 2 image and spectral information for UAV.
+
+### Modelling S2 and UAV reflectance
 
 1. Can we improve the resolution of S2 using UAV?
 2. Can we predict UAV reflectance in places not imaged by the drones?
@@ -274,20 +278,21 @@ legend("topright",c("Data","SVM","RF"),pch= c(16, 4),col=c("black", "blue","red"
 
 ```
 
+### Prediction donwsampled Sentinel 2 reflecctance
+
 SVM and RF models have better characterized the relationship between S2 and UAV blue bands. Let predict high resolution S2 band from existing UAV.
 
 ```{r m6}
 UAV <- subset(v1,'b')
 names(UAV) <-'UAV.b'
-s2h.b <- predict(UAV, rfmod, na.rm=T, progress='window')
+s2h.b <- predict(UAV, rfmod, na.rm=T)
 
-s2h.svm <- predict(UAV, svm.model, na.rm=T, progress='window')
+s2h.svm <- predict(UAV, svm.model, na.rm=T)
 
 x11()
 par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) 
 plot(s2h.svm,  main="svm S2 1m Blue band")
 plot(s2h.b, main="RF S2 1m Blue band")
-
 
 # #parallel processing in raster
 # UAv <- raster(UAV)
@@ -302,6 +307,7 @@ plot(s2h.b, main="RF S2 1m Blue band")
 
 ```
 
+### Validation
 
 But how do we know if this predictions are accurate? We can plot predicted vs actual and also compute RMSE and MAPE using training data. MAPE is given as:
 
@@ -340,17 +346,17 @@ Form the validations Random Forest gives better prediction than Support Vector m
 rfmod <- randomForest(S2.g~UAV.g, data=data)
 UAV=subset(v1,'g')
 names(UAV) <-'UAV.g'
-s2h.g <- predict(UAV, rfmod, na.rm=T, progress='window')
+s2h.g <- predict(UAV, rfmod, na.rm=T)
 #red band
 rfmod <- randomForest(S2.r~UAV.r, data=data)
 UAV=subset(v1,'r')
 names(UAV) <-'UAV.r'
-s2h.r <- predict(UAV, rfmod, na.rm=T, progress='window')
+s2h.r <- predict(UAV, rfmod, na.rm=T)
 #NIR band
 rfmod <- randomForest(S2.nir~UAV.nir, data=data)
 UAV=subset(v1,'nir')
 names(UAV) <-'UAV.nir'
-s2h.nir <- predict(UAV, rfmod, na.rm=T, progress='window')
+s2h.nir <- predict(UAV, rfmod, na.rm=T)
 
 #Stack them
 s2h <- stack(x=c(s2h.b,s2h.g,s2h.r,s2h.nir))
@@ -361,6 +367,7 @@ s2h
 However, the predicted reflectance ranges in all bands except NIR as very low. Why could this be so? 
 Now lets create a high resolution fused image using Zhou's approach.
 
+### Fusion
 
 ```{r m9}
 s2h.fused <- (rast(s2h)/v1)*v1
@@ -377,10 +384,6 @@ box()
 The other would be to upsample the uAV image to 10 m resolution and use S2 to predict UAV (low resolution of 10 m) in areas not covered by the drone and use it in fusion...
 However this approach would require consideration of similar land-cover. For instance, we can not train the model in an area with different land-cover say cropland and predict in another area with say Forest. Food for thought.
 
-
-## Spatial-spectral fusion
-
-Previously we downsampled the UAV image in order to conduct fusion. While this reduces spectral variability it destroys spatial resolution. Therefore, in this section we will first upsample the Satellite image to match UAV spatial resolution and then proceed to condut image fusion. This way, we will improve both spatial and spectral information of Sentinel 2 image. 
 
 ## References
 
