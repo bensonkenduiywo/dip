@@ -1,0 +1,42 @@
+---
+title: "Crop mapping"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+Information on spatial distribution of crops is an important step towards yield estimation. We need to know where the crops are before we estimate the yield in a given region. Ground mapping approaches like surveying are expensive and time intensive. Remote sensing offers an effective and efficient platform for mapping thanks to improved temporal and spatial resolutions. In this case we supplement optical data with UAV images for training sites collection, and image fusion for crop mapping.  
+
+For crop mapping we use two different classification algorithms:
+
+1. Random Forests (RF) by [Breiman 2001](https://link.springer.com/article/10.1023/A:1010933404324).
+2. Maximum Likelihood Classification (MLC).
+
+## Data preparation
+
+Load libraries, declare variables and data paths.
+
+```{r d1, message=FALSE}
+rm(list=ls(all=TRUE))    #Clears R memory
+unlink(".RData") 
+if (!require("pacman")) install.packages("pacman"); library(pacman)
+p_load(raster, terra, randomForest,RStoolbox)
+
+options(warn=1)
+cat("Set variables and start processing\n")
+Root 		<- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/'
+Path_out    <- paste0(Root,"Output/")
+
+```
+
+Load Mpolonjeni UAV images.
+
+```{r d2}
+path <- list.files(paste0(Root,'WingtraOne/Mpolonjeni'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
+
+```
+
