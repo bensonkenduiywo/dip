@@ -416,7 +416,7 @@ rf.mape <- MAPE(rf.pred, data$S2.b)
 rf.mape
 ```
 
-We can see that RMSE and MAPE have reduced by small margins compared to the case of random sampling. Thus there is a chance that sampling over different land-cover improves prediction. 
+We can see that RMSE has by a small margin compared to the case of random sampling. MAPE more or less remained constant. Thus there is a chance that sampling over different land-cover improves prediction. 
 
 As an assignment now predict S2 high resolution using a RF model trained on stratified random samples from K-means classifier.
 

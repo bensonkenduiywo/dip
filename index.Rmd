@@ -19,6 +19,7 @@ A section of the tutorials introduces the basics of data manipulation in R for t
 1. [Manipulating data in R](https://bensonkenduiywo.github.io/intro2geostats/ex1_intro2R.html).
 2. [Data storage schema](lesson1.html).
 3. [Image fusion](fusion.html)
+4. [Image classification](mapping.html)
 
 
 ### Resources
