@@ -50,7 +50,7 @@ path <- list.files(paste0(Root,'S2/interim/'),pattern = (".tif$"), recursive = T
 path
 s <- rast(path)
 s
-path <- list.files(paste0(Root,'WingtraOne/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
+path <- list.files(paste0(Root,'WingtraOne/'),pattern = (".tif$"), full.names = TRUE)
 #reorder the bands to macth those in S2
 paths <- path
 paths[3] <- path[4]
