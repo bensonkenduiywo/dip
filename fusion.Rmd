@@ -15,12 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. **Data fusion** is a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application ([Ranchin and Wald, 2010](https://doi.org/10.1007/978-1-4020-4385-7_11)).
+This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. **Data fusion** is a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of "greater quality” will depend upon the application ([Ranchin and Wald, 2010](https://doi.org/10.1007/978-1-4020-4385-7_11)).
 
-The principal motivation for image fusion is to improve the quality of the information
-contained in the output image in a process known as synergy. A study of existing image
-fusion techniques and applications shows that image fusion can provide us with an output
-image with an improved quality. In this case, the benefits of image fusion include:
+The principal motivation for image fusion is to improve the quality of the information contained in the output image in a process known as synergy. A study of existing image fusion techniques and applications shows that image fusion can provide us with an output image with an improved quality. In this case, the benefits of image fusion include:
 
 1. Extended range of operation.
 2. Extended spatial and temporal coverage.
@@ -46,7 +43,7 @@ Path_out    <- paste0(Root,"Output/")
 
 ```
 
-Let us load UAV and Sentinel 2 optical images that we will use. 
+Load UAV and Sentinel 2 optical images. 
 
 ```{r d2}
 path <- list.files(paste0(Root,'S2/interim/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
@@ -83,7 +80,7 @@ names(v) <- c("b", "g","r", "nir")
 v
 ```
 
-Crop Sentinel 2 image to UAV image extents.
+Crop/clip Sentinel 2 image to UAV image extents.
 
 ```{r d4}
 s <- crop(s, ext(v), snap="near")
@@ -114,7 +111,7 @@ res(v1)
 
 ## Pixel fusion
 
-This sections considers fusion techniques which rely on simple pixel based operations on the input image values. The assumption is that the input images are spatially and temporally aligned, semantically equivalent and radiometrically calibrated. Therefore, let us fuse the two images by multiplication and display it against the original ones.
+This sections considers fusion techniques which rely on simple pixel based operations on input image values. The assumption is that the input images are spatially and temporally aligned, semantically equivalent and radiometrically calibrated. Therefore, let us fuse the two images by multiplication and display it against the original ones.
 
 ```{r d7}
 #Fuse by multiplication
@@ -170,21 +167,17 @@ box()
 
 ```
 
-There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?
+There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compared to those in Sentinel 2. So what now?
 
 ## Feature based fusion
 
-In *feature fusion* we fuse together the features $F_k,k \in{1,2, \dots, K}$. These features can be vegetation indices like Normalized Difference Index (NDVI) or feature maps  that have been made semantically equivalent by transforming them into probabilistic $p(m,n)$, or likelihood, maps.
+In *feature fusion* we fuse together the features $F_k,k \in{1,2, \dots, K}$. These features can be vegetation indices like Normalized Difference Index (NDVI) or feature maps that have been made semantically equivalent by transforming them into probabilistic $p(m,n)$, or likelihood, maps.
 
 Let us start with NDVI ($\text{NDVI}=\frac{\text{NIR}-\text{Red}}{\text{NIR}+\text{Red}}$. First compute NDVI for both UAV and S2.
 
 ```{r n1}
 n_v <- (subset(v_r,"nir")-subset(v_r,"r"))/(subset(v_r,"nir")+subset(v_r,"r"))
 n_s <- (subset(s,"nir")-subset(s,"r"))/(subset(s,"nir")+subset(s,"r"))
-x11()
-par(mfrow = c(1, 2), mar = c(5, 5, 1.4, 0.2))#c(bottom, left, top, right)
-plot(n_v, main="UAV NDVI")
-plot(n_s, main="S2 NDVI")
 ```
 
 How can we fuse the NDVI index? Let us take an average of the two.
@@ -192,23 +185,19 @@ How can we fuse the NDVI index? Let us take an average of the two.
 ```{r n2}
 nf <- mean(n_v, n_s)
 x11()
-plot(nf, main="Fused NDVI")
-```
-
-Is there a difference between UAV NDVI only and the fused one? Let's evaluate the images below.
-
-```{r n3}
-x11()
+par(mfrow = c(2, 2), mar = c(5, 5, 1.4, 0.2))#c(bottom, left, top, right)
 plot(n_v, main="UAV NDVI")
-x11()
+plot(n_s, main="S2 NDVI")
 plot(nf, main="Fused NDVI")
 ```
+
+Is there any difference between S2, UAV, and the fused NDVI images as shown above? 
 
 ## Spatial-spectral fusion
 
 Previously we upsampled the UAV image in order to conduct fusion. While this reduces spectral variability it destroys spatial resolution. Therefore, in this section we will first donwsample the Satellite image to match UAV spatial resolution and then proceed to conduct image fusion. This way, we will improve both spatial and spectral information of Sentinel 2 image and spectral information for UAV.
 
-### Modelling S2 and UAV reflectance
+### Modelling reflectance
 
 1. Can we improve the resolution of S2 using UAV?
 2. Can we predict UAV reflectance in places not imaged by the drones?
@@ -229,7 +218,7 @@ Lets create sample points from S2 (10 m resolution) and upscaled UAV (10 m resol
 ```{r m2}
 set.seed(530)
 x11()
-points <- spatSample(v_r, 1500, "random", as.points=T, na.rm=T, values=F)
+points <- spatSample(v_r, 900, "random", as.points=T, na.rm=T, values=F)
 plotRGB(v_r, r="nir", g="r", b="g", stretch="lin",  main="UAV+sampling points", axes=T, mar = c(4, 5, 1.4, 0.2))
 plot(points,add=T)
 
@@ -244,7 +233,7 @@ vr_p <- extract(v_r, points, drop=F)
 head(vr_p)
 ```
 
-Create a model
+Create a model.
 
 ```{r m4}
 data <- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
@@ -256,10 +245,9 @@ l.model <- lm(S2.b~UAV.b, data=data)
 # Add the fitted line
 abline(l.model, col="red")
 
-
 ```
 
-Looks like the relation within the blue band is not linear. Let's try a non-linear SVm model.
+Looks like the relation within the blue band is not linear. Let's try a non-linear SVM model.
 
 ```{r m5, message=FALSE}
 #SVM
@@ -274,16 +262,16 @@ x11()
 plot(S2.b~UAV.b,data, pch=16)
 points(data$S2.b, svm.pred, col = "blue", pch=4)
 points(data$S2.b, rf.pred, col = "red", pch=4)
-legend("topright",c("Data","SVM","RF"),pch= c(16, 4),col=c("black", "blue","red"))
+legend("topright",c("Data","SVM","RF"), pch= c(16, 4, 4),col=c("black", "blue","red"))
 
 ```
 
-### Prediction donwsampled Sentinel 2 reflecctance
+### Predicting Sentinel 2 reflectance
 
 SVM and RF models have better characterized the relationship between S2 and UAV blue bands. Let predict high resolution S2 band from existing UAV.
 
 ```{r m6}
-UAV <- subset(v1,'b')
+UAV <- v1[['b']] 
 names(UAV) <-'UAV.b'
 s2h.b <- predict(UAV, rfmod, na.rm=T)
 
@@ -309,7 +297,7 @@ plot(s2h.b, main="RF S2 1m Blue band")
 
 ### Validation
 
-But how do we know if this predictions are accurate? We can plot predicted vs actual and also compute RMSE and MAPE using training data. MAPE is given as:
+But how do we know if this predictions are accurate? We can plot predicted vs actual and also compute RMSE and Mean Absolute Percentage Error (MAPE) using training data. MAPE is given as:
 
 ```{r mape}
 MAPE <- function (y_pred, y_true){
@@ -339,7 +327,7 @@ rf.mape <- MAPE(rf.pred, data$S2.b)
 rf.mape
 ```
 
-Form the validations Random Forest gives better prediction than Support Vector machines because it has low percentage and RMSE error. In that case we can adopt the high resolution S2 image predicted by RF and fuse it with UAV image at 1m resolution. Note that we only predict the blue band, we can model and predict the other bands and then fuse them.
+From the validations Random Forest gives better prediction than Support Vector machines because it has low MAPE and RMSE error. In that case we can adopt the high resolution S2 image predicted/simulated by RF and fuse it with UAV image at 1 m resolution. Note that we only predict the blue band, we can model and predict the other bands and then fuse them.
 
 ```{r m8}
 #Green band
@@ -364,8 +352,7 @@ names(s2h) <- c("b", "g","r", "nir")
 s2h
 ```
 
-However, the predicted reflectance ranges in all bands except NIR as very low. Why could this be so? 
-Now lets create a high resolution fused image using Zhou's approach.
+However, the predicted reflectance ranges in all bands except NIR are very low. Why could this be so?  Now lets create a high resolution fused image using Zhou's approach.
 
 ### Fusion
 
@@ -381,9 +368,57 @@ plotRGB(v, r="nir", g="r", b="g", stretch="lin", main="UAV", axes=T, mar = c(4, 
 box()
 ```
 
-The other would be to upsample the uAV image to 10 m resolution and use S2 to predict UAV (low resolution of 10 m) in areas not covered by the drone and use it in fusion...
-However this approach would require consideration of similar land-cover. For instance, we can not train the model in an area with different land-cover say cropland and predict in another area with say Forest. Food for thought.
+The other option would be use S2 to predict UAV in areas not covered by the drone and then fuse it with S2. However this approach would require consideration of similar land-cover. For instance, we can not train the model in an area with different land-cover say cropland and predict in another area with say Forest. Food for thought.
 
+But let's step back a little, could sampling from land-cover categories have improved prediction of high resolution S2 done previously with RF? To test this, let us perform a K-means classification and sample from its land-cover map. 
+
+```{r m10}
+image <- v_r
+image[is.na(image)] <- 0
+nclass <- 4
+system.time(
+E <- kmeans(as.data.frame(image, na.rm=F), nclass, iter.max = 100, nstart = 9)
+)
+k.map <- image[[1]]
+values(k.map) <- E$cluster
+k.map[is.na(v_r[[1]])] <- NA
+plot(k.map)
+```
+
+Sample points using stratified random sampling based on the K-means land-cover map.
+
+```{r m11}
+set.seed(530)
+points <- spatSample(k.map, 900, "stratified", as.points=T, na.rm=T, values=F)
+x11()
+plot(k.map,  main="K-means +sampling points", axes=T, mar = c(4, 5, 1.4, 0.2), col=topo.colors(max(values(k.map),na.rm=T)))
+plot(points,add=T)
+```
+
+Use the stratified randomly sample points to train and predict simulated high resolution S2.
+
+```{r m12}
+s2_p <- extract(s, points, drop=F)
+head(s2_p)
+vr_p <- extract(v_r, points, drop=F)
+head(vr_p)
+data <- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
+rfmod <- randomForest(S2.b~UAV.b, data=data)
+rf.pred <- predict(rfmod, data)
+```
+
+Lets evaluate if stratified random sampling improved RF accuracy.
+
+```{r m13}
+rf.rmse <- rmse(rf.pred-data$S2.b)
+rf.rmse
+rf.mape <- MAPE(rf.pred, data$S2.b)
+rf.mape
+```
+
+We can see that RMSE and MAPE have reduced by small margins compared to the case of random sampling. Thus there is a chance that sampling over different land-cover improves prediction. 
+
+As an assignment now predict S2 high resolution using a RF model trained on stratified random samples from K-means classifier.
 
 ## References
 

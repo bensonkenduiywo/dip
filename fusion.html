@@ -385,7 +385,7 @@ div.tocify {
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. <strong>Data fusion</strong> is a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of ”greater quality” will depend upon the application (<a href="https://doi.org/10.1007/978-1-4020-4385-7_11">Ranchin and Wald, 2010</a>).</p>
+<p>This tutorial seeks to illustrate how image fusion can be conducted. We use an Unmanned Aerial Vehicle (UAV) and Sentinel 2 optical image acquired within the same area and period. <strong>Data fusion</strong> is a formal framework in which are expressed means and tools for the alliance of data originating from different sources. It aims at obtaining information of greater quality; the exact definition of “greater quality” will depend upon the application (<a href="https://doi.org/10.1007/978-1-4020-4385-7_11">Ranchin and Wald, 2010</a>).</p>
 <p>The principal motivation for image fusion is to improve the quality of the information contained in the output image in a process known as synergy. A study of existing image fusion techniques and applications shows that image fusion can provide us with an output image with an improved quality. In this case, the benefits of image fusion include:</p>
 <ol style="list-style-type: decimal">
 <li>Extended range of operation.</li>
@@ -409,7 +409,7 @@ cat(&quot;Set variables and start processing\n&quot;)</code></pre>
 <pre><code>## Set variables and start processing</code></pre>
 <pre class="r"><code>Root        &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/&#39;
 Path_out    &lt;- paste0(Root,&quot;Output/&quot;)</code></pre>
-<p>Let us load UAV and Sentinel 2 optical images that we will use.</p>
+<p>Load UAV and Sentinel 2 optical images.</p>
 <pre class="r"><code>path &lt;- list.files(paste0(Root,&#39;S2/interim/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
 path</code></pre>
 <pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B02.tif&quot;
@@ -493,7 +493,7 @@ v</code></pre>
 ##               mpolonjeni_05042021m3f1_transparent_reflectance_red.tif  
 ##               ... and 1 more source(s)
 ## names       : b, g, r, nir</code></pre>
-<p>Crop Sentinel 2 image to UAV image extents.</p>
+<p>Crop/clip Sentinel 2 image to UAV image extents.</p>
 <pre class="r"><code>s &lt;- crop(s, ext(v), snap=&quot;near&quot;)</code></pre>
 <p>Display the images side by side.</p>
 <pre class="r"><code>x11()
@@ -516,7 +516,7 @@ res(v1) </code></pre>
 </div>
 <div id="pixel-fusion" class="section level2">
 <h2>Pixel fusion</h2>
-<p>This sections considers fusion techniques which rely on simple pixel based operations on the input image values. The assumption is that the input images are spatially and temporally aligned, semantically equivalent and radiometrically calibrated. Therefore, let us fuse the two images by multiplication and display it against the original ones.</p>
+<p>This sections considers fusion techniques which rely on simple pixel based operations on input image values. The assumption is that the input images are spatially and temporally aligned, semantically equivalent and radiometrically calibrated. Therefore, let us fuse the two images by multiplication and display it against the original ones.</p>
 <pre class="r"><code>#Fuse by multiplication
 f1 &lt;- s * v_r
 f1</code></pre>
@@ -579,34 +579,29 @@ box()
 plotRGB(f3, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;Zhou etal&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
 box()</code></pre>
 <p><img src="fusion_files/figure-html/d9-1.png" width="672" /></p>
-<p>There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compare to those in Sentinel 2. So what now?</p>
+<p>There seem to be some linear relationship between UAV and Sentinel 2 surface reflectance. However it is evident that reflectance values from UAV are higher compared to those in Sentinel 2. So what now?</p>
 </div>
 <div id="feature-based-fusion" class="section level2">
 <h2>Feature based fusion</h2>
 <p>In <em>feature fusion</em> we fuse together the features <span class="math inline">\(F_k,k \in{1,2, \dots, K}\)</span>. These features can be vegetation indices like Normalized Difference Index (NDVI) or feature maps that have been made semantically equivalent by transforming them into probabilistic <span class="math inline">\(p(m,n)\)</span>, or likelihood, maps.</p>
 <p>Let us start with NDVI (<span class="math inline">\(\text{NDVI}=\frac{\text{NIR}-\text{Red}}{\text{NIR}+\text{Red}}\)</span>. First compute NDVI for both UAV and S2.</p>
 <pre class="r"><code>n_v &lt;- (subset(v_r,&quot;nir&quot;)-subset(v_r,&quot;r&quot;))/(subset(v_r,&quot;nir&quot;)+subset(v_r,&quot;r&quot;))
-n_s &lt;- (subset(s,&quot;nir&quot;)-subset(s,&quot;r&quot;))/(subset(s,&quot;nir&quot;)+subset(s,&quot;r&quot;))
-x11()
-par(mfrow = c(1, 2), mar = c(5, 5, 1.4, 0.2))#c(bottom, left, top, right)
-plot(n_v, main=&quot;UAV NDVI&quot;)
-plot(n_s, main=&quot;S2 NDVI&quot;)</code></pre>
-<p><img src="fusion_files/figure-html/n1-1.png" width="672" /></p>
+n_s &lt;- (subset(s,&quot;nir&quot;)-subset(s,&quot;r&quot;))/(subset(s,&quot;nir&quot;)+subset(s,&quot;r&quot;))</code></pre>
 <p>How can we fuse the NDVI index? Let us take an average of the two.</p>
 <pre class="r"><code>nf &lt;- mean(n_v, n_s)
 x11()
+par(mfrow = c(2, 2), mar = c(5, 5, 1.4, 0.2))#c(bottom, left, top, right)
+plot(n_v, main=&quot;UAV NDVI&quot;)
+plot(n_s, main=&quot;S2 NDVI&quot;)
 plot(nf, main=&quot;Fused NDVI&quot;)</code></pre>
 <p><img src="fusion_files/figure-html/n2-1.png" width="672" /></p>
-<p>Is there a difference between UAV NDVI only and the fused one? Let’s evaluate the images below.</p>
-<pre class="r"><code>x11()
-plot(n_v, main=&quot;UAV NDVI&quot;)</code></pre>
-<p><img src="fusion_files/figure-html/n3-1.png" width="672" /></p>
-<pre class="r"><code>x11()
-plot(nf, main=&quot;Fused NDVI&quot;)</code></pre>
-<p><img src="fusion_files/figure-html/n3-2.png" width="672" /></p>
+<p>Is there any difference between S2, UAV, and the fused NDVI images as shown above?</p>
 </div>
-<div id="modelling-s2-and-uav-reflectance" class="section level2">
-<h2>Modelling S2 and UAV reflectance</h2>
+<div id="spatial-spectral-fusion" class="section level2">
+<h2>Spatial-spectral fusion</h2>
+<p>Previously we upsampled the UAV image in order to conduct fusion. While this reduces spectral variability it destroys spatial resolution. Therefore, in this section we will first donwsample the Satellite image to match UAV spatial resolution and then proceed to conduct image fusion. This way, we will improve both spatial and spectral information of Sentinel 2 image and spectral information for UAV.</p>
+<div id="modelling-reflectance" class="section level3">
+<h3>Modelling reflectance</h3>
 <ol style="list-style-type: decimal">
 <li>Can we improve the resolution of S2 using UAV?</li>
 <li>Can we predict UAV reflectance in places not imaged by the drones?</li>
@@ -622,7 +617,7 @@ plot(as.vector(subset(s,&#39;nir&#39;)),as.vector(subset(v_r,&#39;nir&#39;)), xl
 <p>Lets create sample points from S2 (10 m resolution) and upscaled UAV (10 m resolution) and use them to create a model that we can predict S2 reflectance based on UAV 1 m resolution. Essentially what we are doing here is to create a model that can predict S2 reflectance at a resolution of 1 m.</p>
 <pre class="r"><code>set.seed(530)
 x11()
-points &lt;- spatSample(v_r, 1500, &quot;random&quot;, as.points=T, na.rm=T, values=F)
+points &lt;- spatSample(v_r, 900, &quot;random&quot;, as.points=T, na.rm=T, values=F)
 plotRGB(v_r, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV+sampling points&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
 plot(points,add=T)</code></pre>
 <p><img src="fusion_files/figure-html/m2-1.png" width="672" /></p>
@@ -645,7 +640,7 @@ head(vr_p)</code></pre>
 ## 4  4 0.02047731 0.05194858 0.02767093 0.3193594
 ## 5  5 0.04172961 0.09754695 0.07302261 0.4105712
 ## 6  6 0.03550068 0.07566584 0.05827252 0.2950630</code></pre>
-<p>Create a model</p>
+<p>Create a model.</p>
 <pre class="r"><code>data &lt;- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
 head(data)</code></pre>
 <pre><code>##         S2.b       S2.g       S2.r S2.nir      UAV.b      UAV.g      UAV.r
@@ -669,7 +664,7 @@ l.model &lt;- lm(S2.b~UAV.b, data=data)
 # Add the fitted line
 abline(l.model, col=&quot;red&quot;)</code></pre>
 <p><img src="fusion_files/figure-html/m4-1.png" width="672" /></p>
-<p>Looks like the relation within the blue band is not linear. Let’s try a non-linear SVm model.</p>
+<p>Looks like the relation within the blue band is not linear. Let’s try a non-linear SVM model.</p>
 <pre class="r"><code>#SVM
 library(e1071)
 svm.model &lt;- svm(S2.b~UAV.b, data=data)
@@ -682,28 +677,19 @@ x11()
 plot(S2.b~UAV.b,data, pch=16)
 points(data$S2.b, svm.pred, col = &quot;blue&quot;, pch=4)
 points(data$S2.b, rf.pred, col = &quot;red&quot;, pch=4)
-legend(&quot;topright&quot;,c(&quot;Data&quot;,&quot;SVM&quot;,&quot;RF&quot;),pch= c(16, 4),col=c(&quot;black&quot;, &quot;blue&quot;,&quot;red&quot;))</code></pre>
+legend(&quot;topright&quot;,c(&quot;Data&quot;,&quot;SVM&quot;,&quot;RF&quot;), pch= c(16, 4, 4),col=c(&quot;black&quot;, &quot;blue&quot;,&quot;red&quot;))</code></pre>
 <p><img src="fusion_files/figure-html/m5-1.png" width="672" /></p>
+</div>
+<div id="predicting-sentinel-2-reflectance" class="section level3">
+<h3>Predicting Sentinel 2 reflectance</h3>
 <p>SVM and RF models have better characterized the relationship between S2 and UAV blue bands. Let predict high resolution S2 band from existing UAV.</p>
-<pre class="r"><code>UAV=subset(v1,&#39;b&#39;)
+<pre class="r"><code>UAV &lt;- v1[[&#39;b&#39;]] 
 names(UAV) &lt;-&#39;UAV.b&#39;
-startTime &lt;- Sys.time() 
-cat(&quot;Start time&quot;, format(startTime),&quot;\n&quot;)</code></pre>
-<pre><code>## Start time 2021-05-20 13:45:35</code></pre>
-<pre class="r"><code>s2h.b &lt;- predict(UAV, rfmod, na.rm=T, progress=&#39;window&#39;)
-timeDiff &lt;- Sys.time() - startTime
-cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)</code></pre>
-<pre><code>## 
-##  Processing time 51.57604 secs</code></pre>
-<pre class="r"><code>startTime &lt;- Sys.time() 
-cat(&quot;Start time&quot;, format(startTime),&quot;\n&quot;)</code></pre>
-<pre><code>## Start time 2021-05-20 13:46:27</code></pre>
-<pre class="r"><code>s2h.svm &lt;- predict(UAV, svm.model, na.rm=T, progress=&#39;window&#39;)
-timeDiff &lt;- Sys.time() - startTime
-cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)</code></pre>
-<pre><code>## 
-##  Processing time 1.650603 mins</code></pre>
-<pre class="r"><code>x11()
+s2h.b &lt;- predict(UAV, rfmod, na.rm=T)
+
+s2h.svm &lt;- predict(UAV, svm.model, na.rm=T)
+
+x11()
 par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) 
 plot(s2h.svm,  main=&quot;svm S2 1m Blue band&quot;)
 plot(s2h.b, main=&quot;RF S2 1m Blue band&quot;)</code></pre>
@@ -718,7 +704,10 @@ plot(s2h.b, main=&quot;RF S2 1m Blue band&quot;)</code></pre>
 # endCluster()
 # timeDiff &lt;- Sys.time() - startTime
 # cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)</code></pre>
-<p>But how do we know if this predictions are accurate? We can plot predicted vs actual and also compute RMSE and MAPE using training data. MAPE is given as:</p>
+</div>
+<div id="validation" class="section level3">
+<h3>Validation</h3>
+<p>But how do we know if this predictions are accurate? We can plot predicted vs actual and also compute RMSE and Mean Absolute Percentage Error (MAPE) using training data. MAPE is given as:</p>
 <pre class="r"><code>MAPE &lt;- function (y_pred, y_true){
     MAPE &lt;- mean(abs((y_true - y_pred)/y_true))
     return(MAPE*100)
@@ -730,32 +719,32 @@ plot(s2h.b, main=&quot;RF S2 1m Blue band&quot;)</code></pre>
 <p>So lets compute MAPE and RMSE for both methods.</p>
 <pre class="r"><code>svm.rmse &lt;- rmse(svm.pred-data$S2.b)
 svm.rmse</code></pre>
-<pre><code>## [1] 0.00385778</code></pre>
+<pre><code>## [1] 0.003996155</code></pre>
 <pre class="r"><code>rf.rmse &lt;- rmse(rf.pred-data$S2.b)
 rf.rmse</code></pre>
-<pre><code>## [1] 0.002162497</code></pre>
+<pre><code>## [1] 0.002186289</code></pre>
 <pre class="r"><code>svm.mape &lt;- MAPE(svm.pred, data$S2.b)
 svm.mape</code></pre>
-<pre><code>## [1] 7.435733</code></pre>
+<pre><code>## [1] 7.315199</code></pre>
 <pre class="r"><code>rf.mape &lt;- MAPE(rf.pred, data$S2.b)
 rf.mape</code></pre>
-<pre><code>## [1] 4.529936</code></pre>
-<p>Form the validations Random Forest gives better prediction than Support Vector machines because it has low percentage and RMSE error. In that case we can adopt the high resolution S2 image predicted by RF and fuse it with UAV image at 1m resolution. Note that we only predict the blue band, we can model and predict the other bands and then fuse them.</p>
+<pre><code>## [1] 4.358044</code></pre>
+<p>From the validations Random Forest gives better prediction than Support Vector machines because it has low MAPE and RMSE error. In that case we can adopt the high resolution S2 image predicted/simulated by RF and fuse it with UAV image at 1 m resolution. Note that we only predict the blue band, we can model and predict the other bands and then fuse them.</p>
 <pre class="r"><code>#Green band
 rfmod &lt;- randomForest(S2.g~UAV.g, data=data)
 UAV=subset(v1,&#39;g&#39;)
 names(UAV) &lt;-&#39;UAV.g&#39;
-s2h.g &lt;- predict(UAV, rfmod, na.rm=T, progress=&#39;window&#39;)
+s2h.g &lt;- predict(UAV, rfmod, na.rm=T)
 #red band
 rfmod &lt;- randomForest(S2.r~UAV.r, data=data)
 UAV=subset(v1,&#39;r&#39;)
 names(UAV) &lt;-&#39;UAV.r&#39;
-s2h.r &lt;- predict(UAV, rfmod, na.rm=T, progress=&#39;window&#39;)
+s2h.r &lt;- predict(UAV, rfmod, na.rm=T)
 #NIR band
 rfmod &lt;- randomForest(S2.nir~UAV.nir, data=data)
 UAV=subset(v1,&#39;nir&#39;)
 names(UAV) &lt;-&#39;UAV.nir&#39;
-s2h.nir &lt;- predict(UAV, rfmod, na.rm=T, progress=&#39;window&#39;)
+s2h.nir &lt;- predict(UAV, rfmod, na.rm=T)
 
 #Stack them
 s2h &lt;- stack(x=c(s2h.b,s2h.g,s2h.r,s2h.nir))
@@ -767,9 +756,12 @@ s2h</code></pre>
 ## extent     : 390450, 391210, 7070170, 7071740  (xmin, xmax, ymin, ymax)
 ## crs        : NA 
 ## names      :          b,          g,          r,        nir 
-## min values : 0.02290628, 0.03504863, 0.02560420, 0.11839891 
-## max values : 0.06080442, 0.08018391, 0.10138434, 0.30508668</code></pre>
-<p>However, the predicted reflectance ranges in all bands except NIR as very low. Why could this be so? Now lets create a high resolution fused image using Zhou’s approach.</p>
+## min values : 0.02305458, 0.03414621, 0.02679058, 0.12475280 
+## max values : 0.06060897, 0.08070807, 0.10184987, 0.30137640</code></pre>
+<p>However, the predicted reflectance ranges in all bands except NIR are very low. Why could this be so? Now lets create a high resolution fused image using Zhou’s approach.</p>
+</div>
+<div id="fusion" class="section level3">
+<h3>Fusion</h3>
 <pre class="r"><code>s2h.fused &lt;- (rast(s2h)/v1)*v1
 s2h.fused</code></pre>
 <pre><code>## class       : SpatRaster 
@@ -779,8 +771,8 @@ s2h.fused</code></pre>
 ## coord. ref. :  
 ## source      : memory 
 ## names       :          b,          g,          r,        nir 
-## min values  : 0.02290628, 0.03504863, 0.02560420, 0.11839891 
-## max values  : 0.06080442, 0.08018391, 0.10138434, 0.30508668</code></pre>
+## min values  : 0.02305458, 0.03414621, 0.02679058, 0.12475280 
+## max values  : 0.06060897, 0.08070807, 0.10184987, 0.30137640</code></pre>
 <pre class="r"><code>x11()
 par(mfrow = c(1, 2), mar = c(4, 5, 1.4, 0.2)) 
 plotRGB(s2h.fused, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;,  main=&quot;UAV+S2 high res&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
@@ -788,11 +780,60 @@ box()
 plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, main=&quot;UAV&quot;, axes=T, mar = c(4, 5, 1.4, 0.2))
 box()</code></pre>
 <p><img src="fusion_files/figure-html/m9-1.png" width="672" /></p>
-<p>The other would be to upsample the uAV image to 10 m resolution and use S2 to predict UAV (low resolution of 10 m) in areas not covered by the drone and use it in fusion… However this approach would require consideration of similar land-cover. For instance, we can not train the model in an area with different land-cover say cropland and predict in another area with say Forest. Food for thought.</p>
+<p>The other option would be use S2 to predict UAV in areas not covered by the drone and then fuse it with S2. However this approach would require consideration of similar land-cover. For instance, we can not train the model in an area with different land-cover say cropland and predict in another area with say Forest. Food for thought.</p>
+<p>But let’s step back a little, could sampling from land-cover categories have improved prediction of high resolution S2 done previously with RF? To test this, let us perform a K-means classification and sample from its land-cover map.</p>
+<pre class="r"><code>image &lt;- v_r
+image[is.na(image)] &lt;- 0
+nclass &lt;- 4
+system.time(
+E &lt;- kmeans(as.data.frame(image, na.rm=F), nclass, iter.max = 100, nstart = 9)
+)</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.11    0.00    0.11</code></pre>
+<pre class="r"><code>k.map &lt;- image[[1]]
+values(k.map) &lt;- E$cluster
+k.map[is.na(v_r[[1]])] &lt;- NA
+plot(k.map)</code></pre>
+<p><img src="fusion_files/figure-html/m10-1.png" width="672" /></p>
+<p>Sample points using stratified random sampling based on the K-means land-cover map.</p>
+<pre class="r"><code>set.seed(530)
+points &lt;- spatSample(k.map, 900, &quot;stratified&quot;, as.points=T, na.rm=T, values=F)
+x11()
+plot(k.map,  main=&quot;K-means +sampling points&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), col=topo.colors(max(values(k.map),na.rm=T)))
+plot(points,add=T)</code></pre>
+<p><img src="fusion_files/figure-html/m11-1.png" width="672" /></p>
+<p>Use the stratified randomly sample points to train and predict simulated high resolution S2.</p>
+<pre class="r"><code>s2_p &lt;- extract(s, points, drop=F)
+head(s2_p)</code></pre>
+<pre><code>##   ID          b          g          r    nir
+## 1  1 0.04770000 0.05939999 0.07750000 0.1492
+## 2  2 0.03960000 0.05549999 0.07099999 0.2073
+## 3  3 0.03320000 0.04880000 0.05010000 0.2258
+## 4  4 0.03379999 0.04790000 0.06040000 0.1966
+## 5  5 0.04420000 0.06200000 0.07959999 0.2172
+## 6  6 0.04070000 0.05980000 0.06649999 0.2101</code></pre>
+<pre class="r"><code>vr_p &lt;- extract(v_r, points, drop=F)
+head(vr_p)</code></pre>
+<pre><code>##   ID          b          g          r       nir
+## 1  1 0.05413008 0.09205989 0.11132049 0.2734993
+## 2  2 0.04446261 0.10010008 0.08397383 0.4695161
+## 3  3 0.03073439 0.07668109 0.05490024 0.4001549
+## 4  4 0.02435945 0.06213900 0.04357978 0.3155672
+## 5  5 0.03281799 0.06734130 0.06080524 0.2811245
+## 6  6 0.03464006 0.07732372 0.05422943 0.3122228</code></pre>
+<pre class="r"><code>data &lt;- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
+rfmod &lt;- randomForest(S2.b~UAV.b, data=data)
+rf.pred &lt;- predict(rfmod, data)</code></pre>
+<p>Lets evaluate if stratified random sampling improved RF accuracy.</p>
+<pre class="r"><code>rf.rmse &lt;- rmse(rf.pred-data$S2.b)
+rf.rmse</code></pre>
+<pre><code>## [1] 0.00193131</code></pre>
+<pre class="r"><code>rf.mape &lt;- MAPE(rf.pred, data$S2.b)
+rf.mape</code></pre>
+<pre><code>## [1] 4.36695</code></pre>
+<p>We can see that RMSE and MAPE have reduced by small margins compared to the case of random sampling. Thus there is a chance that sampling over different land-cover improves prediction.</p>
+<p>As an assignment now predict S2 high resolution using a RF model trained on stratified random samples from K-means classifier.</p>
 </div>
-<div id="spatial-spectral-fusion" class="section level2">
-<h2>Spatial-spectral fusion</h2>
-<p>Previously we downsampled the UAV image in order to conduct fusion. While this reduces spectral variability it destroys spatial resolution. Therefore, in this section we will first upsample the Satellite image to match UAV spatial resolution and then proceed to condut image fusion. This way, we will improve both spatial and spectral information of Sentinel 2 image.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
