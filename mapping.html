@@ -332,8 +332,254 @@ cat(&quot;Set variables and start processing\n&quot;)</code></pre>
 <pre><code>## Set variables and start processing</code></pre>
 <pre class="r"><code>Root        &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/&#39;
 Path_out    &lt;- paste0(Root,&quot;Output/&quot;)</code></pre>
-<p>Load Mpolonjeni UAV images.</p>
-<pre class="r"><code>path &lt;- list.files(paste0(Root,&#39;WingtraOne/Mpolonjeni&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)</code></pre>
+<p>Load Mpolonjeni UAV images for mission 1–5 and Sentinel 2</p>
+<pre class="r"><code>#Sentinel 2
+path &lt;- list.files(paste0(Root,&#39;S2/interim/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
+path</code></pre>
+<pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B02.tif&quot;
+## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B03.tif&quot;
+## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B04.tif&quot;
+## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B08.tif&quot;</code></pre>
+<pre class="r"><code>s &lt;- rast(path)
+names(s) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;r&quot;, &quot;nir&quot;)
+s</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 10980, 10980, 4  (nrow, ncol, nlyr)
+## resolution  : 10, 10  (x, y)
+## extent      : 3e+05, 409800, 6990220, 7100020  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## sources     : RT_T36JUR_20210418T073611_B02.tif  
+##               RT_T36JUR_20210418T073611_B03.tif  
+##               RT_T36JUR_20210418T073611_B04.tif  
+##               ... and 1 more source(s)
+## names       : b, g, r, nir</code></pre>
+<pre class="r"><code>#UAV
+folders &lt;- list.dirs(paste0(Root,&#39;WingtraOne/Mpolonjeni&#39;),recursive=TRUE)[-1]
+folders </code></pre>
+<pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m1f1&quot;  
+## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m2f1&quot;  
+## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m3f1&quot;  
+## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m4f1&quot;  
+## [5] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m5f1f2&quot;</code></pre>
+<pre class="r"><code>for (i in 1:length(folders)) {
+  path &lt;- list.files(folders[i], pattern = (&quot;.tif$&quot;))
+  # Remove all before and up to &quot;reflectance_&quot; in gsub
+  path &lt;- path[order(gsub(&quot;.*reflectance_&quot;,&quot;&quot;,path))][-4]
+  #reorder the bands to match those in S2
+  paths &lt;- path
+  paths[3] &lt;- path[4]
+  paths[4] &lt;- path[3]
+  temp &lt;- rast(paste0(folders[i],&quot;/&quot;,paths))
+  names(temp) &lt;- c(&quot;b&quot;, &quot;g&quot;, &quot;r&quot;, &quot;nir&quot;)
+  assign(paste0(&quot;v&quot;, i), temp) 
+}</code></pre>
+<p>We now have all the image missions loaded from corresponding sub-folders, stacked, and dynamically allocated variables i.e. <span class="math inline">\(\text{v1},\text{v2},\dots,\text{v5}\)</span>. Resample all the images to 1 m spatial resolution using bilinear approach and mosaic them.</p>
+<pre class="r"><code>temp &lt;- aggregate(v1[[1]], 9)
+res(temp) &lt;- c(1, 1)
+v1 &lt;- resample(v1, temp, method=&#39;bilinear&#39;)
+temp &lt;- aggregate(v2[[1]], 9)
+res(temp) &lt;- c(1, 1)
+v2 &lt;- resample(v2, temp, method=&#39;bilinear&#39;)
+temp &lt;- aggregate(v3[[1]], 9)
+res(temp) &lt;- c(1, 1)
+v3 &lt;- resample(v3, temp, method=&#39;bilinear&#39;)
+temp &lt;- aggregate(v4[[1]], 9)
+res(temp) &lt;- c(1, 1)
+v4 &lt;- resample(v4, temp, method=&#39;bilinear&#39;)
+temp &lt;- aggregate(v5[[1]], 9)
+res(temp) &lt;- c(1, 1)
+v5 &lt;- resample(v5, temp, method=&#39;bilinear&#39;)</code></pre>
+<p>Let’s now mosaic the scenes to form one image. We will use median to average out the overlaps. Median is preferred because it has been shown to be robust to outliers compared to the mean.</p>
+<pre class="r"><code>v &lt;- mosaic(v1, v2, v3, v4, v5, fun=&quot;median&quot;)</code></pre>
+<pre><code>## Warning: [mosaic] rasters did not align and were resampled</code></pre>
+<p>Save the mosaic to disk.</p>
+<pre class="r"><code>filename &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
+if(!file.exists(filename)){
+  writeRaster(v, filename)  
+}</code></pre>
+<p>Crop/clip Sentinel 2 image to UAV image extents.</p>
+<pre class="r"><code>s &lt;- crop(s, ext(v), snap=&quot;near&quot;)</code></pre>
+<p>Display the images side by side.</p>
+<pre class="r"><code>x11()
+par(mfrow = c(1, 2)) #c(bottom, left, top, right)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;S2&quot;, cex.axis=0.5)
+box()
+plotRGB(v, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes=T, mar = c(4, 5, 1.4, 0.2), main=&quot;UAV&quot;, cex.axis=0.5)
+box()</code></pre>
+<p><img src="mapping_files/figure-html/d7-1.png" width="672" /></p>
+</div>
+<div id="training-data-sampling" class="section level2">
+<h2>Training data sampling</h2>
+<p>Load train data.</p>
+<pre class="r"><code>#ref &lt;- vect(paste0(Root,&#39;Vector/Training_Sites_Mpolonjeni.shp&#39;), &quot;polygons&quot;)
+ref  &lt;- shapefile(paste0(Root,&#39;Vector/Training_Sites_Mpolonjeni.shp&#39;))</code></pre>
+<p>Sample points from the polygons (stratified random sampling).</p>
+<pre class="r"><code>set.seed(530)
+samp &lt;- spsample(ref, 4000, type=&#39;stratified&#39;)</code></pre>
+<pre><code>## Warning in proj4string(obj): CRS object has comment, which is lost in output</code></pre>
+<pre class="r"><code># add the land cover class to the points
+samp$class &lt;- over(samp, ref)$Name
+table(samp$class)</code></pre>
+<pre><code>## 
+##     built_up      cassava        grass        maize      sorghum sweet_potato 
+##          736          107          144          715          229          729 
+##        trees    waterbody 
+##          967          353</code></pre>
+<pre class="r"><code>sort(unique(samp$class))</code></pre>
+<pre><code>## [1] &quot;built_up&quot;     &quot;cassava&quot;      &quot;grass&quot;        &quot;maize&quot;        &quot;sorghum&quot;     
+## [6] &quot;sweet_potato&quot; &quot;trees&quot;        &quot;waterbody&quot;</code></pre>
+<pre class="r"><code>sum(table(samp$class))</code></pre>
+<pre><code>## [1] 3980</code></pre>
+<p>Transform samples to coordinates of the image.</p>
+<pre class="r"><code>samp &lt;- spTransform(samp, crs(s))
+nClasses &lt;- 8
+Classes &lt;- data.frame(classID=c(1:8),class=c(&#39;Built_up&#39;,&#39;Cassava&#39;, &#39;Grass&#39;, 
+&#39;Maize&#39;,  &#39;Sorghum&#39;, &#39;Sweet_potato&#39;,&#39;Trees&#39;,&#39;Water&#39;))</code></pre>
+<p>Display S2 image and the training points.</p>
+<pre class="r"><code>add_legend &lt;- function(...) {
+  opar &lt;- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
+    mar=c(0, 0, 0, 0), new=TRUE)
+  on.exit(par(opar))
+  plot(0, 0, type=&#39;n&#39;, bty=&#39;n&#39;, xaxt=&#39;n&#39;, yaxt=&#39;n&#39;)
+  legend(...)
+}
+
+x11()
+#par(mar = c(4, 4, 1.4, 0.1)) #c(bottom, left, top, right)
+plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, mar = c(4, 5, 1.4, 0.1))
+#points(samp, col=&quot;blue&quot;, cex=.5)
+lines(spTransform(ref, crs(s)), col=&quot;blue&quot;, lwd=1.5)
+add_legend(&quot;bottom&quot;, legend=c(&quot;Reference data&quot;, &quot;No Data&quot;), 
+pch=c(0,15), col=c(&quot;blue&quot;, &quot;black&quot;), horiz=T, bty=&#39;n&#39;, cex=1.1)</code></pre>
+<p><img src="mapping_files/figure-html/v4-1.png" width="672" /></p>
+<p>Extract S2 pixels values overlaid by points and split them into training and validation points.</p>
+<pre class="r"><code>trainData &lt;- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData)</code></pre>
+<pre><code>##       class          b      g     r    nir
+## 1 waterbody 0.02279999 0.0253 0.024 0.0227
+## 2 waterbody 0.02279999 0.0253 0.024 0.0227
+## 3 waterbody 0.02279999 0.0253 0.024 0.0227
+## 4 waterbody 0.02279999 0.0253 0.024 0.0227
+## 5 waterbody 0.02279999 0.0253 0.024 0.0227
+## 6 waterbody 0.02279999 0.0253 0.024 0.0227</code></pre>
+<pre class="r"><code>library(caTools)
+#(NB: 0.4 means 40% for training and 60% for validation)
+labels &lt;- as.data.frame(trainData[,1])
+split &lt;- sample.split(labels, SplitRatio = 0.4)
+valid &lt;- subset(trainData, split == FALSE) 
+train &lt;- subset(trainData, split == TRUE) 
+table(train$class)</code></pre>
+<pre><code>## 
+##     built_up      cassava        grass        maize      sorghum sweet_potato 
+##          248           35           46          240           75          244 
+##        trees    waterbody 
+##          321          118</code></pre>
+<pre class="r"><code>table(valid$class)</code></pre>
+<pre><code>## 
+##     built_up      cassava        grass        maize      sorghum sweet_potato 
+##          488           72           98          475          154          485 
+##        trees    waterbody 
+##          646          235</code></pre>
+</div>
+<div id="mlc" class="section level2">
+<h2>MLC</h2>
+<p>Classify S2 image using MLC algorithm.</p>
+<pre class="r"><code>mlc.run &lt;- superClass(brick(v), trainData, responseCol = &quot;class&quot;,
+                model = &quot;mlc&quot;, minDist = 1)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;ggplot2&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:randomForest&#39;:
+## 
+##     margin</code></pre>
+<pre class="r"><code>val.test &lt;- validateMap(mlc.run$map, valid, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
+classMapping = mlc.run$classMapping)</code></pre>
+<p>Make a function to display classified images and use it to display the MLC map.</p>
+<pre class="r"><code>display &lt;- function(map, method, nClasses){
+    windows()
+    par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
+    image(map, col=c(&quot;magenta&quot;, &quot;darkgreen&quot;, &quot;seagreen1&quot; , &quot;yellow&quot;, &quot;darkseagreen&quot;, &quot;green1&quot;,
+    &quot;cyan&quot;,&quot;blue&quot;), axes=T, ann=F)
+    classes.Palette &lt;- colorRampPalette(c(&quot;magenta&quot;, &quot;darkgreen&quot;, &quot;seagreen1&quot; , &quot;yellow&quot;, &quot;darkseagreen&quot;, &quot;green1&quot;,
+    &quot;cyan&quot;,&quot;blue&quot;, &quot;white&quot;)) 
+    add_legend(&quot;bottom&quot;, legend=c(&#39;Built_up&#39;,&#39;Cassava&#39;, &#39;Grass&#39;, 
+&#39;Maize&#39;,  &#39;Sorghum&#39;, &#39;Sweet_potato&#39;,&#39;Trees&#39;,&#39;Water&#39;, &quot;No data&quot;), fill=classes.Palette(nClasses+1), ncol=3, bty=&#39;n&#39;, cex=1.1,  pt.bg = NA)
+    title(paste0(method,&quot; Classification&quot;))
+}
+display(mlc.run$map, &quot;MLC&quot;, nClasses)</code></pre>
+<p>Lets design a fucntion for accuracy assessment.</p>
+<pre class="r"><code>accuracy1 &lt;- function(val.test){
+    assessment.storage &lt;- val.test$performance 
+    #print(assessment.storage)
+    list_of_datasets &lt;- list(&quot;ConfusionMatrix&quot; = as.matrix(assessment.storage$table), 
+                    &quot;OverallAcc&quot; = as.matrix(assessment.storage$overall), 
+                    &quot;byClass&quot; = as.matrix(assessment.storage$byClass))
+    return(list_of_datasets)
+}</code></pre>
+<p>Assess the accuracy of MLC.</p>
+<pre class="r"><code>List &lt;- accuracy1(val.test)
+#Confusion matrix
+List$ConfusionMatrix</code></pre>
+<pre><code>##               Reference
+## Prediction     built_up cassava grass maize sorghum sweet_potato trees
+##   built_up          274       0     0     0       0            0     1
+##   cassava             0      42     0     0       0            0     0
+##   grass               0       0    59    21       0            0     6
+##   maize              10       0     1   210       3            0    10
+##   sorghum             0       0     0     9      80            0     2
+##   sweet_potato        0       0     0     0       0          237     0
+##   trees               0       0     3     1       0            3   330
+##   waterbody           0       0     0     0       0            0     0
+##               Reference
+## Prediction     waterbody
+##   built_up             0
+##   cassava              0
+##   grass                0
+##   maize                4
+##   sorghum              0
+##   sweet_potato         0
+##   trees                0
+##   waterbody          107</code></pre>
+<pre class="r"><code>#Overall accuracy
+List$OverallAcc</code></pre>
+<pre><code>##                     [,1]
+## Accuracy       0.9476292
+## Kappa          0.9370111
+## AccuracyLower  0.9346966
+## AccuracyUpper  0.9586571
+## AccuracyNull   0.2469922
+## AccuracyPValue 0.0000000
+## McnemarPValue        NaN</code></pre>
+<pre class="r"><code>#by class
+List$byClass</code></pre>
+<pre><code>##                     Sensitivity Specificity Pos Pred Value Neg Pred Value
+## Class: built_up       0.9647887   0.9991143      0.9963636      0.9912127
+## Class: cassava        1.0000000   1.0000000      1.0000000      1.0000000
+## Class: grass          0.9365079   0.9800000      0.6860465      0.9969857
+## Class: maize          0.8713693   0.9761092      0.8823529      0.9736170
+## Class: sorghum        0.9638554   0.9917293      0.8791209      0.9977307
+## Class: sweet_potato   0.9875000   1.0000000      1.0000000      0.9974490
+## Class: trees          0.9455587   0.9934211      0.9792285      0.9823420
+## Class: waterbody      0.9639640   1.0000000      1.0000000      0.9969372
+##                     Precision    Recall        F1 Prevalence Detection Rate
+## Class: built_up     0.9963636 0.9647887 0.9803220 0.20099080     0.19391366
+## Class: cassava      1.0000000 1.0000000 1.0000000 0.02972399     0.02972399
+## Class: grass        0.6860465 0.9365079 0.7919463 0.04458599     0.04175513
+## Class: maize        0.8823529 0.8713693 0.8768267 0.17055909     0.14861996
+## Class: sorghum      0.8791209 0.9638554 0.9195402 0.05874027     0.05661713
+## Class: sweet_potato 1.0000000 0.9875000 0.9937107 0.16985138     0.16772824
+## Class: trees        0.9792285 0.9455587 0.9620991 0.24699222     0.23354565
+## Class: waterbody    1.0000000 0.9639640 0.9816514 0.07855626     0.07572541
+##                     Detection Prevalence Balanced Accuracy
+## Class: built_up               0.19462137         0.9819515
+## Class: cassava                0.02972399         1.0000000
+## Class: grass                  0.06086341         0.9582540
+## Class: maize                  0.16843595         0.9237393
+## Class: sorghum                0.06440198         0.9777924
+## Class: sweet_potato           0.16772824         0.9937500
+## Class: trees                  0.23849965         0.9694899
+## Class: waterbody              0.07572541         0.9819820</code></pre>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>

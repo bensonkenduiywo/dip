@@ -33,10 +33,212 @@ Path_out    <- paste0(Root,"Output/")
 
 ```
 
-Load Mpolonjeni UAV images.
+Load Mpolonjeni UAV images for mission 1--5 and Sentinel 2
 
 ```{r d2}
-path <- list.files(paste0(Root,'WingtraOne/Mpolonjeni'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
+#Sentinel 2
+path <- list.files(paste0(Root,'S2/interim/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
+path
+s <- rast(path)
+names(s) <- c("b", "g","r", "nir")
+s
+#UAV
+folders <- list.dirs(paste0(Root,'WingtraOne/Mpolonjeni'),recursive=TRUE)[-1]
+folders 
+for (i in 1:length(folders)) {
+  path <- list.files(folders[i], pattern = (".tif$"))
+  # Remove all before and up to "reflectance_" in gsub
+  path <- path[order(gsub(".*reflectance_","",path))][-4]
+  #reorder the bands to match those in S2
+  paths <- path
+  paths[3] <- path[4]
+  paths[4] <- path[3]
+  temp <- rast(paste0(folders[i],"/",paths))
+  names(temp) <- c("b", "g", "r", "nir")
+  assign(paste0("v", i), temp) 
+}
 
 ```
+
+We now have all the image missions loaded from corresponding sub-folders, stacked, and dynamically allocated variables i.e. $\text{v1},\text{v2},\dots,\text{v5}$. Resample all the images to 1 m spatial resolution using bilinear approach and mosaic them.
+
+```{r d3}
+temp <- aggregate(v1[[1]], 9)
+res(temp) <- c(1, 1)
+v1 <- resample(v1, temp, method='bilinear')
+temp <- aggregate(v2[[1]], 9)
+res(temp) <- c(1, 1)
+v2 <- resample(v2, temp, method='bilinear')
+temp <- aggregate(v3[[1]], 9)
+res(temp) <- c(1, 1)
+v3 <- resample(v3, temp, method='bilinear')
+temp <- aggregate(v4[[1]], 9)
+res(temp) <- c(1, 1)
+v4 <- resample(v4, temp, method='bilinear')
+temp <- aggregate(v5[[1]], 9)
+res(temp) <- c(1, 1)
+v5 <- resample(v5, temp, method='bilinear')
+
+```
+
+Let's now mosaic the scenes to form one image. We will use median to average out the overlaps. Median is preferred because it has been shown to be robust to outliers compared to the mean.
+
+```{r d4}
+v <- mosaic(v1, v2, v3, v4, v5, fun="median")
+
+```
+
+Save the mosaic to disk.
+
+```{r d5}
+filename <- paste0(Path_out,'Mpolonjeni_W1_Mosaic.tif')
+if(!file.exists(filename)){
+  writeRaster(v, filename)	
+}
+
+```
+
+Crop/clip Sentinel 2 image to UAV image extents.
+
+```{r d6}
+s <- crop(s, ext(v), snap="near")
+```
+
+
+Display the images side by side.
+
+```{r d7, message = FALSE}
+x11()
+par(mfrow = c(1, 2)) #c(bottom, left, top, right)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="S2", cex.axis=0.5)
+box()
+plotRGB(v, r="nir", g="r", b="g", stretch="lin", axes=T, mar = c(4, 5, 1.4, 0.2), main="UAV", cex.axis=0.5)
+box()
+
+```
+
+## Training data sampling
+
+Load train data.
+
+```{r v1,message=FALSE}
+#ref <- vect(paste0(Root,'Vector/Training_Sites_Mpolonjeni.shp'), "polygons")
+ref  <- shapefile(paste0(Root,'Vector/Training_Sites_Mpolonjeni.shp'))
+
+```
+
+Sample points from the polygons (stratified random sampling).
+
+```{r v2}
+set.seed(530)
+samp <- spsample(ref, 4000, type='stratified')
+# add the land cover class to the points
+samp$class <- over(samp, ref)$Name
+table(samp$class)
+sort(unique(samp$class))
+sum(table(samp$class))
+```
+
+Transform  samples to coordinates of the image.
+
+```{r v3}
+samp <- spTransform(samp, crs(s))
+nClasses <- 8
+Classes <- data.frame(classID=c(1:8),class=c('Built_up','Cassava', 'Grass', 
+'Maize',  'Sorghum', 'Sweet_potato','Trees','Water'))
+```
+
+Display S2 image and the training points.
+
+```{r v4}
+add_legend <- function(...) {
+  opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
+    mar=c(0, 0, 0, 0), new=TRUE)
+  on.exit(par(opar))
+  plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
+  legend(...)
+}
+
+x11()
+#par(mar = c(4, 4, 1.4, 0.1)) #c(bottom, left, top, right)
+plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes = TRUE, mar = c(4, 5, 1.4, 0.1))
+#points(samp, col="blue", cex=.5)
+lines(spTransform(ref, crs(s)), col="blue", lwd=1.5)
+add_legend("bottom", legend=c("Reference data", "No Data"), 
+pch=c(0,15), col=c("blue", "black"), horiz=T, bty='n', cex=1.1)
+   
+
+```
+
+Extract S2 pixels values overlaid by points and split them into training and validation points.
+
+```{r v5, message=FALSE}
+trainData <- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData)
+library(caTools)
+#(NB: 0.4 means 40% for training and 60% for validation)
+labels <- as.data.frame(trainData[,1])
+split <- sample.split(labels, SplitRatio = 0.4)
+valid <- subset(trainData, split == FALSE) 
+train <- subset(trainData, split == TRUE) 
+table(train$class)
+table(valid$class)
+```
+
+## MLC
+
+Classify S2 image using MLC algorithm.
+
+```{r mlc1}
+mlc.run <- superClass(brick(v), trainData, responseCol = "class",
+                model = "mlc", minDist = 1)
+val.test <- validateMap(mlc.run$map, valid, responseCol="class", mode='classification', 
+classMapping = mlc.run$classMapping)
+```
+
+
+Make a function to display classified images and use it to display the MLC map.
+
+```{r disp}
+display <- function(map, method, nClasses){
+	windows()
+	par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
+	image(map, col=c("magenta", "darkgreen", "seagreen1" , "yellow", "darkseagreen", "green1",
+	"cyan","blue"), axes=T, ann=F)
+	classes.Palette <- colorRampPalette(c("magenta", "darkgreen", "seagreen1" , "yellow", "darkseagreen", "green1",
+	"cyan","blue", "white")) 
+	add_legend("bottom", legend=c('Built_up','Cassava', 'Grass', 
+'Maize',  'Sorghum', 'Sweet_potato','Trees','Water', "No data"), fill=classes.Palette(nClasses+1), ncol=3, bty='n', cex=1.1,  pt.bg = NA)
+	title(paste0(method," Classification"))
+}
+display(mlc.run$map, "MLC", nClasses)
+```
+
+Lets design a fucntion for accuracy assessment.
+
+```{r acc1}
+accuracy1 <- function(val.test){
+	assessment.storage <- val.test$performance 
+	#print(assessment.storage)
+	list_of_datasets <- list("ConfusionMatrix" = as.matrix(assessment.storage$table), 
+					"OverallAcc" = as.matrix(assessment.storage$overall), 
+					"byClass" = as.matrix(assessment.storage$byClass))
+	return(list_of_datasets)
+}
+
+ 
+```
+
+Assess the accuracy of MLC.
+
+```{r acc2}
+List <- accuracy1(val.test)
+#Confusion matrix
+List$ConfusionMatrix
+#Overall accuracy
+List$OverallAcc
+#by class
+List$byClass
+```
+
 
