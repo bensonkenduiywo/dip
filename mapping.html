@@ -28,6 +28,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -220,6 +223,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -227,6 +293,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -551,40 +627,39 @@ List$OverallAcc</code></pre>
 ## AccuracyNull   0.2469922
 ## AccuracyPValue 0.0000000
 ## McnemarPValue        NaN</code></pre>
-<pre class="r"><code>#by class
-List$byClass</code></pre>
-<pre><code>##                     Sensitivity Specificity Pos Pred Value Neg Pred Value
-## Class: built_up       0.9647887   0.9991143      0.9963636      0.9912127
-## Class: cassava        1.0000000   1.0000000      1.0000000      1.0000000
-## Class: grass          0.9365079   0.9800000      0.6860465      0.9969857
-## Class: maize          0.8713693   0.9761092      0.8823529      0.9736170
-## Class: sorghum        0.9638554   0.9917293      0.8791209      0.9977307
-## Class: sweet_potato   0.9875000   1.0000000      1.0000000      0.9974490
-## Class: trees          0.9455587   0.9934211      0.9792285      0.9823420
-## Class: waterbody      0.9639640   1.0000000      1.0000000      0.9969372
-##                     Precision    Recall        F1 Prevalence Detection Rate
-## Class: built_up     0.9963636 0.9647887 0.9803220 0.20099080     0.19391366
-## Class: cassava      1.0000000 1.0000000 1.0000000 0.02972399     0.02972399
-## Class: grass        0.6860465 0.9365079 0.7919463 0.04458599     0.04175513
-## Class: maize        0.8823529 0.8713693 0.8768267 0.17055909     0.14861996
-## Class: sorghum      0.8791209 0.9638554 0.9195402 0.05874027     0.05661713
-## Class: sweet_potato 1.0000000 0.9875000 0.9937107 0.16985138     0.16772824
-## Class: trees        0.9792285 0.9455587 0.9620991 0.24699222     0.23354565
-## Class: waterbody    1.0000000 0.9639640 0.9816514 0.07855626     0.07572541
-##                     Detection Prevalence Balanced Accuracy
-## Class: built_up               0.19462137         0.9819515
-## Class: cassava                0.02972399         1.0000000
-## Class: grass                  0.06086341         0.9582540
-## Class: maize                  0.16843595         0.9237393
-## Class: sorghum                0.06440198         0.9777924
-## Class: sweet_potato           0.16772824         0.9937500
-## Class: trees                  0.23849965         0.9694899
-## Class: waterbody              0.07572541         0.9819820</code></pre>
+<pre class="r"><code>#user accuracy
+data.frame(Landcover=Classes[,-1],User=as.data.frame(List$byClass)[,&#39;Precision&#39;])</code></pre>
+<pre><code>##      Landcover      User
+## 1     Built_up 0.9963636
+## 2      Cassava 1.0000000
+## 3        Grass 0.6860465
+## 4        Maize 0.8823529
+## 5      Sorghum 0.8791209
+## 6 Sweet_potato 1.0000000
+## 7        Trees 0.9792285
+## 8        Water 1.0000000</code></pre>
+<pre class="r"><code>#Producer accuracy
+data.frame(Landcover=Classes[,-1],Producer=as.data.frame(List$byClass)[,&#39;Sensitivity&#39;])</code></pre>
+<pre><code>##      Landcover  Producer
+## 1     Built_up 0.9647887
+## 2      Cassava 1.0000000
+## 3        Grass 0.9365079
+## 4        Maize 0.8713693
+## 5      Sorghum 0.9638554
+## 6 Sweet_potato 0.9875000
+## 7        Trees 0.9455587
+## 8        Water 0.9639640</code></pre>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Breiman, L. Random Forests. <em>Machine Learning</em> 45, 5–32 (2001). <a href="https://doi.org/10.1023/A:1010933404324" class="uri">https://doi.org/10.1023/A:1010933404324</a></p>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
 
 
+</div>
+</div>
 
 </div>
 
@@ -617,6 +692,32 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

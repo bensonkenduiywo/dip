@@ -1,6 +1,12 @@
 ---
 title: "Crop mapping"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -237,8 +243,13 @@ List <- accuracy1(val.test)
 List$ConfusionMatrix
 #Overall accuracy
 List$OverallAcc
-#by class
-List$byClass
+#user accuracy
+data.frame(Landcover=Classes[,-1],User=as.data.frame(List$byClass)[,'Precision'])
+#Producer accuracy
+data.frame(Landcover=Classes[,-1],Producer=as.data.frame(List$byClass)[,'Sensitivity'])
 ```
 
 
+## References
+
+Breiman, L. Random Forests. *Machine Learning* 45, 5–32 (2001). https://doi.org/10.1023/A:1010933404324
