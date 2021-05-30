@@ -408,15 +408,10 @@ cat(&quot;Set variables and start processing\n&quot;)</code></pre>
 <pre><code>## Set variables and start processing</code></pre>
 <pre class="r"><code>Root        &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/&#39;
 Path_out    &lt;- paste0(Root,&quot;Output/&quot;)</code></pre>
-<p>Load Mpolonjeni UAV images for mission 1–5 and Sentinel 2</p>
+<p>Load Mpolonjeni UAV images for mission 1–5 and Sentinel 2. We will mosaic the UAV images to one image at 1 m spatial resolution and save to disk later. Once this is done we skip this process every other time we ru the script.</p>
 <pre class="r"><code>#Sentinel 2
 path &lt;- list.files(paste0(Root,&#39;S2/interim/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
-path</code></pre>
-<pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B02.tif&quot;
-## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B03.tif&quot;
-## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B04.tif&quot;
-## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/S2/interim/RT_T36JUR_20210418T073611_B08.tif&quot;</code></pre>
-<pre class="r"><code>s &lt;- rast(path)
+s &lt;- rast(path)
 names(s) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;r&quot;, &quot;nir&quot;)
 s</code></pre>
 <pre><code>## class       : SpatRaster 
@@ -430,14 +425,11 @@ s</code></pre>
 ##               ... and 1 more source(s)
 ## names       : b, g, r, nir</code></pre>
 <pre class="r"><code>#UAV
+mosaicname &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
+if(!file.exists(mosaicname)){
 folders &lt;- list.dirs(paste0(Root,&#39;WingtraOne/Mpolonjeni&#39;),recursive=TRUE)[-1]
-folders </code></pre>
-<pre><code>## [1] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m1f1&quot;  
-## [2] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m2f1&quot;  
-## [3] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m3f1&quot;  
-## [4] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m4f1&quot;  
-## [5] &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/WingtraOne/Mpolonjeni/m5f1f2&quot;</code></pre>
-<pre class="r"><code>for (i in 1:length(folders)) {
+folders 
+for (i in 1:length(folders)) {
   path &lt;- list.files(folders[i], pattern = (&quot;.tif$&quot;))
   # Remove all before and up to &quot;reflectance_&quot; in gsub
   path &lt;- path[order(gsub(&quot;.*reflectance_&quot;,&quot;&quot;,path))][-4]
@@ -448,30 +440,36 @@ folders </code></pre>
   temp &lt;- rast(paste0(folders[i],&quot;/&quot;,paths))
   names(temp) &lt;- c(&quot;b&quot;, &quot;g&quot;, &quot;r&quot;, &quot;nir&quot;)
   assign(paste0(&quot;v&quot;, i), temp) 
+}
+}else{
+  v &lt;- rast(mosaicname)
 }</code></pre>
 <p>We now have all the image missions loaded from corresponding sub-folders, stacked, and dynamically allocated variables i.e. <span class="math inline">\(\text{v1},\text{v2},\dots,\text{v5}\)</span>. Resample all the images to 1 m spatial resolution using bilinear approach and mosaic them.</p>
-<pre class="r"><code>temp &lt;- aggregate(v1[[1]], 9)
-res(temp) &lt;- c(1, 1)
-v1 &lt;- resample(v1, temp, method=&#39;bilinear&#39;)
-temp &lt;- aggregate(v2[[1]], 9)
-res(temp) &lt;- c(1, 1)
-v2 &lt;- resample(v2, temp, method=&#39;bilinear&#39;)
-temp &lt;- aggregate(v3[[1]], 9)
-res(temp) &lt;- c(1, 1)
-v3 &lt;- resample(v3, temp, method=&#39;bilinear&#39;)
-temp &lt;- aggregate(v4[[1]], 9)
-res(temp) &lt;- c(1, 1)
-v4 &lt;- resample(v4, temp, method=&#39;bilinear&#39;)
-temp &lt;- aggregate(v5[[1]], 9)
-res(temp) &lt;- c(1, 1)
-v5 &lt;- resample(v5, temp, method=&#39;bilinear&#39;)</code></pre>
+<pre class="r"><code>if(!file.exists(mosaicname)){
+  temp &lt;- aggregate(v1[[1]], 9)
+  res(temp) &lt;- c(1, 1)
+  v1 &lt;- resample(v1, temp, method=&#39;bilinear&#39;)
+  temp &lt;- aggregate(v2[[1]], 9)
+  res(temp) &lt;- c(1, 1)
+  v2 &lt;- resample(v2, temp, method=&#39;bilinear&#39;)
+  temp &lt;- aggregate(v3[[1]], 9)
+  res(temp) &lt;- c(1, 1)
+  v3 &lt;- resample(v3, temp, method=&#39;bilinear&#39;)
+  temp &lt;- aggregate(v4[[1]], 9)
+  res(temp) &lt;- c(1, 1)
+  v4 &lt;- resample(v4, temp, method=&#39;bilinear&#39;)
+  temp &lt;- aggregate(v5[[1]], 9)
+  res(temp) &lt;- c(1, 1)
+  v5 &lt;- resample(v5, temp, method=&#39;bilinear&#39;)
+}</code></pre>
 <p>Let’s now mosaic the scenes to form one image. We will use median to average out the overlaps. Median is preferred because it has been shown to be robust to outliers compared to the mean.</p>
-<pre class="r"><code>v &lt;- mosaic(v1, v2, v3, v4, v5, fun=&quot;median&quot;)</code></pre>
-<pre><code>## Warning: [mosaic] rasters did not align and were resampled</code></pre>
+<pre class="r"><code>if(!file.exists(mosaicname)){
+  v &lt;- mosaic(v1, v2, v3, v4, v5, fun=&quot;median&quot;)
+}</code></pre>
 <p>Save the mosaic to disk.</p>
-<pre class="r"><code>filename &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
-if(!file.exists(filename)){
-  writeRaster(v, filename)  
+<pre class="r"><code>mosaicname &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
+if(!file.exists(mosaicname)){
+  writeRaster(v, mosaicname)    
 }</code></pre>
 <p>Crop/clip Sentinel 2 image to UAV image extents.</p>
 <pre class="r"><code>s &lt;- crop(s, ext(v), snap=&quot;near&quot;)</code></pre>
@@ -525,12 +523,21 @@ x11()
 plotRGB(s, r=&quot;nir&quot;, g=&quot;r&quot;, b=&quot;g&quot;, stretch=&quot;lin&quot;, axes = TRUE, mar = c(4, 5, 1.4, 0.1))
 #points(samp, col=&quot;blue&quot;, cex=.5)
 lines(spTransform(ref, crs(s)), col=&quot;blue&quot;, lwd=1.5)
-add_legend(&quot;bottom&quot;, legend=c(&quot;Reference data&quot;, &quot;No Data&quot;), 
-pch=c(0,15), col=c(&quot;blue&quot;, &quot;black&quot;), horiz=T, bty=&#39;n&#39;, cex=1.1)</code></pre>
+add_legend(&quot;bottom&quot;, legend=&quot;Reference data&quot;, 
+pch=c(0,15), col=&quot;blue&quot;, horiz=T, bty=&#39;n&#39;, cex=1.1)</code></pre>
 <p><img src="mapping_files/figure-html/v4-1.png" width="672" /></p>
-<p>Extract S2 pixels values overlaid by points and split them into training and validation points.</p>
-<pre class="r"><code>trainData &lt;- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
-head(trainData)</code></pre>
+<p>Extract UAV and S2 pixels values overlaid by points and split them into training and validation points.</p>
+<pre class="r"><code>trainData.v &lt;- extract(brick(v), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData.v)</code></pre>
+<pre><code>##       class          b          g          r        nir
+## 1 waterbody 0.06256156 0.09644703 0.09899782 0.08365054
+## 2 waterbody 0.06439328 0.09717349 0.10095690 0.08490235
+## 3 waterbody 0.06439328 0.09717349 0.10095690 0.08490235
+## 4 waterbody 0.06425814 0.09694316 0.10035420 0.08650444
+## 5 waterbody 0.06456918 0.09819815 0.10220221 0.08649202
+## 6 waterbody 0.06425814 0.09694316 0.10035420 0.08650444</code></pre>
+<pre class="r"><code>trainData.s &lt;- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData.s)</code></pre>
 <pre><code>##       class          b      g     r    nir
 ## 1 waterbody 0.02279999 0.0253 0.024 0.0227
 ## 2 waterbody 0.02279999 0.0253 0.024 0.0227
@@ -540,40 +547,55 @@ head(trainData)</code></pre>
 ## 6 waterbody 0.02279999 0.0253 0.024 0.0227</code></pre>
 <pre class="r"><code>library(caTools)
 #(NB: 0.4 means 40% for training and 60% for validation)
-labels &lt;- as.data.frame(trainData[,1])
+labels &lt;- as.data.frame(trainData.v[,1])
 split &lt;- sample.split(labels, SplitRatio = 0.4)
-valid &lt;- subset(trainData, split == FALSE) 
-train &lt;- subset(trainData, split == TRUE) 
-table(train$class)</code></pre>
+#UAV
+valid.v &lt;- subset(trainData.v, split == FALSE) 
+train.v &lt;- subset(trainData.v, split == TRUE) 
+table(train.v$class)</code></pre>
 <pre><code>## 
 ##     built_up      cassava        grass        maize      sorghum sweet_potato 
 ##          248           35           46          240           75          244 
 ##        trees    waterbody 
 ##          321          118</code></pre>
-<pre class="r"><code>table(valid$class)</code></pre>
+<pre class="r"><code>table(valid.v$class)</code></pre>
+<pre><code>## 
+##     built_up      cassava        grass        maize      sorghum sweet_potato 
+##          488           72           98          475          154          485 
+##        trees    waterbody 
+##          646          235</code></pre>
+<pre class="r"><code>#Sentinel 2
+valid.s &lt;- subset(trainData.s, split == FALSE) 
+train.s &lt;- subset(trainData.s, split == TRUE) 
+table(train.s$class)</code></pre>
+<pre><code>## 
+##     built_up      cassava        grass        maize      sorghum sweet_potato 
+##          248           35           46          240           75          244 
+##        trees    waterbody 
+##          321          118</code></pre>
+<pre class="r"><code>table(valid.s$class)</code></pre>
 <pre><code>## 
 ##     built_up      cassava        grass        maize      sorghum sweet_potato 
 ##          488           72           98          475          154          485 
 ##        trees    waterbody 
 ##          646          235</code></pre>
 </div>
-<div id="mlc" class="section level2">
-<h2>MLC</h2>
-<p>Classify S2 image using MLC algorithm.</p>
-<pre class="r"><code>mlc.run &lt;- superClass(brick(v), trainData, responseCol = &quot;class&quot;,
-                model = &quot;mlc&quot;, minDist = 1)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre><code>## 
-## Attaching package: &#39;ggplot2&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:randomForest&#39;:
-## 
-##     margin</code></pre>
-<pre class="r"><code>val.test &lt;- validateMap(mlc.run$map, valid, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
-classMapping = mlc.run$classMapping)</code></pre>
+<div id="maximum-likelihood-classification" class="section level2">
+<h2>Maximum Likelihood Classification</h2>
+<p>Classify UAV and S2 image using MLC algorithm.</p>
+<pre class="r"><code>#UAV classification
+mlc.uav &lt;- superClass(brick(v), train.v, responseCol = &quot;class&quot;,
+                model = &quot;mlc&quot;, minDist = 1)
+val.uav &lt;- validateMap(mlc.uav$map, valid.v, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
+classMapping = mlc.uav$classMapping)
+#Sentinel 2 classification
+mlc.s &lt;- superClass(brick(s), train.s, responseCol = &quot;class&quot;,
+                model = &quot;mlc&quot;, minDist = 1)
+val.s &lt;- validateMap(mlc.s$map, valid.s, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
+classMapping = mlc.s$classMapping)</code></pre>
 <p>Make a function to display classified images and use it to display the MLC map.</p>
 <pre class="r"><code>display &lt;- function(map, method, nClasses){
-    windows()
+    x11()
     par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
     image(map, col=c(&quot;magenta&quot;, &quot;darkgreen&quot;, &quot;seagreen1&quot; , &quot;yellow&quot;, &quot;darkseagreen&quot;, &quot;green1&quot;,
     &quot;cyan&quot;,&quot;blue&quot;), axes=T, ann=F)
@@ -583,9 +605,16 @@ classMapping = mlc.run$classMapping)</code></pre>
 &#39;Maize&#39;,  &#39;Sorghum&#39;, &#39;Sweet_potato&#39;,&#39;Trees&#39;,&#39;Water&#39;, &quot;No data&quot;), fill=classes.Palette(nClasses+1), ncol=3, bty=&#39;n&#39;, cex=1.1,  pt.bg = NA)
     title(paste0(method,&quot; Classification&quot;))
 }
-display(mlc.run$map, &quot;MLC&quot;, nClasses)</code></pre>
-<p>Lets design a fucntion for accuracy assessment.</p>
-<pre class="r"><code>accuracy1 &lt;- function(val.test){
+mlc.disp.v &lt;- display(mlc.uav$map, &quot;UAV MLC&quot;, nClasses)
+mlc.disp.s &lt;- display(mlc.s$map, &quot;S2 MLC&quot;, nClasses)
+
+mlc.disp.v</code></pre>
+<p><img src="mapping_files/figure-html/disp-1.png" width="672" /></p>
+<pre><code>## NULL</code></pre>
+<pre class="r"><code>mlc.disp.s</code></pre>
+<pre><code>## NULL</code></pre>
+<p>Lets design a function for accuracy assessment.</p>
+<pre class="r"><code>accuracy &lt;- function(val.test){
     assessment.storage &lt;- val.test$performance 
     #print(assessment.storage)
     list_of_datasets &lt;- list(&quot;ConfusionMatrix&quot; = as.matrix(assessment.storage$table), 
@@ -594,18 +623,19 @@ display(mlc.run$map, &quot;MLC&quot;, nClasses)</code></pre>
     return(list_of_datasets)
 }</code></pre>
 <p>Assess the accuracy of MLC.</p>
-<pre class="r"><code>List &lt;- accuracy1(val.test)
-#Confusion matrix
-List$ConfusionMatrix</code></pre>
+<pre class="r"><code>print(&#39;UAV Confusion matrixs&#39;)</code></pre>
+<pre><code>## [1] &quot;UAV Confusion matrixs&quot;</code></pre>
+<pre class="r"><code>List.v &lt;- accuracy(val.uav)
+List.v$ConfusionMatrix</code></pre>
 <pre><code>##               Reference
 ## Prediction     built_up cassava grass maize sorghum sweet_potato trees
 ##   built_up          274       0     0     0       0            0     1
-##   cassava             0      42     0     0       0            0     0
-##   grass               0       0    59    21       0            0     6
-##   maize              10       0     1   210       3            0    10
-##   sorghum             0       0     0     9      80            0     2
-##   sweet_potato        0       0     0     0       0          237     0
-##   trees               0       0     3     1       0            3   330
+##   cassava             0      41     0     0       0            0     0
+##   grass               0       0    58    20       0            0     6
+##   maize              10       0     2   213       3            0    11
+##   sorghum             0       0     0     8      80            0     2
+##   sweet_potato        0       1     0     0       0          237     1
+##   trees               0       0     3     0       0            3   328
 ##   waterbody           0       0     0     0       0            0     0
 ##               Reference
 ## Prediction     waterbody
@@ -617,42 +647,206 @@ List$ConfusionMatrix</code></pre>
 ##   sweet_potato         0
 ##   trees                0
 ##   waterbody          107</code></pre>
-<pre class="r"><code>#Overall accuracy
-List$OverallAcc</code></pre>
-<pre><code>##                     [,1]
-## Accuracy       0.9476292
-## Kappa          0.9370111
-## AccuracyLower  0.9346966
-## AccuracyUpper  0.9586571
-## AccuracyNull   0.2469922
-## AccuracyPValue 0.0000000
-## McnemarPValue        NaN</code></pre>
-<pre class="r"><code>#user accuracy
-data.frame(Landcover=Classes[,-1],User=as.data.frame(List$byClass)[,&#39;Precision&#39;])</code></pre>
-<pre><code>##      Landcover      User
-## 1     Built_up 0.9963636
-## 2      Cassava 1.0000000
-## 3        Grass 0.6860465
-## 4        Maize 0.8823529
-## 5      Sorghum 0.8791209
-## 6 Sweet_potato 1.0000000
-## 7        Trees 0.9792285
-## 8        Water 1.0000000</code></pre>
-<pre class="r"><code>#Producer accuracy
-data.frame(Landcover=Classes[,-1],Producer=as.data.frame(List$byClass)[,&#39;Sensitivity&#39;])</code></pre>
-<pre><code>##      Landcover  Producer
-## 1     Built_up 0.9647887
-## 2      Cassava 1.0000000
-## 3        Grass 0.9365079
-## 4        Maize 0.8713693
-## 5      Sorghum 0.9638554
-## 6 Sweet_potato 0.9875000
-## 7        Trees 0.9455587
-## 8        Water 0.9639640</code></pre>
+<pre class="r"><code>print(&#39;S2 Confusion matrixs&#39;)</code></pre>
+<pre><code>## [1] &quot;S2 Confusion matrixs&quot;</code></pre>
+<pre class="r"><code>List.s &lt;- accuracy(val.s)
+List.s$ConfusionMatrix</code></pre>
+<pre><code>##               Reference
+## Prediction     built_up cassava grass maize sorghum sweet_potato trees
+##   built_up           70       0     0     1       0            0     2
+##   cassava             0       9     0     0       0            0     0
+##   grass               4       0     8     4       0            0     1
+##   maize               7       0    15    28       1            0     9
+##   sorghum             2       0     1     4       8            0     4
+##   sweet_potato        0       0     0     0       0           14     2
+##   trees               0       0     0     1       0            0   115
+##   waterbody           0       0     0     0       0            0     0
+##               Reference
+## Prediction     waterbody
+##   built_up             0
+##   cassava              0
+##   grass                0
+##   maize                0
+##   sorghum              0
+##   sweet_potato         0
+##   trees                0
+##   waterbody            8</code></pre>
+<pre class="r"><code>print(&#39;Other accuracy measures&#39;)</code></pre>
+<pre><code>## [1] &quot;Other accuracy measures&quot;</code></pre>
+<pre class="r"><code>data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3))</code></pre>
+<pre><code>##                  UAV    S2
+## Accuracy       0.947 0.818
+## Kappa          0.936 0.759
+## AccuracyLower  0.934 0.771
+## AccuracyUpper  0.958 0.858
+## AccuracyNull   0.247 0.418
+## AccuracyPValue 0.000 0.000
+## McnemarPValue    NaN   NaN</code></pre>
+<pre class="r"><code>data.frame(UAV_F1score=round(List.v$byClass[,&#39;F1&#39;],3),S2_F1score=round(List.s$byClass[,&#39;F1&#39;],3))</code></pre>
+<pre><code>##                     UAV_F1score S2_F1score
+## Class: built_up           0.980      0.897
+## Class: cassava            0.988      1.000
+## Class: grass              0.789      0.390
+## Class: maize              0.880      0.571
+## Class: sorghum            0.925      0.571
+## Class: sweet_potato       0.990      0.933
+## Class: trees              0.960      0.924
+## Class: waterbody          0.982      1.000</code></pre>
+<pre class="r"><code>data.frame(UAV_UserAcc=round(List.v$byClass[,&#39;Precision&#39;],3),S2_UserAcc=round(List.s$byClass[,&#39;Precision&#39;],3))</code></pre>
+<pre><code>##                     UAV_UserAcc S2_UserAcc
+## Class: built_up           0.996      0.959
+## Class: cassava            1.000      1.000
+## Class: grass              0.690      0.471
+## Class: maize              0.877      0.467
+## Class: sorghum            0.889      0.421
+## Class: sweet_potato       0.992      0.875
+## Class: trees              0.982      0.991
+## Class: waterbody          1.000      1.000</code></pre>
+<pre class="r"><code>data.frame(UAV_ProducerAcc=round(List.v$byClass[,&#39;Sensitivity&#39;],3),S2_ProducerAcc=round(List.s$byClass[,&#39;Sensitivity&#39;],3))</code></pre>
+<pre><code>##                     UAV_ProducerAcc S2_ProducerAcc
+## Class: built_up               0.965          0.843
+## Class: cassava                0.976          1.000
+## Class: grass                  0.921          0.333
+## Class: maize                  0.884          0.737
+## Class: sorghum                0.964          0.889
+## Class: sweet_potato           0.988          1.000
+## Class: trees                  0.940          0.865
+## Class: waterbody              0.964          1.000</code></pre>
+<p>Generally UAV gives better accuracy in most classes except for cassava and water where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let’s consider a Zhou’s fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.</p>
+<p>Downsample S2 to UAV 1 m spatial resolution using bilinear.</p>
+<pre class="r"><code>s_r &lt;- resample(s,v,method=&quot;bilinear&quot;)</code></pre>
+<p>Now sample points from UAV MLC land-cover RF regression prediction.</p>
+<pre class="r"><code>set.seed(530)
+points &lt;- spatSample(rast(mlc.uav$map), 3000, &quot;stratified&quot;, as.points=T, na.rm=T, values=F)</code></pre>
+<p>Use the stratified randomly sample points to train and predict simulated high resolution S2.</p>
+<pre class="r"><code>s2_p &lt;- extract(s, points, drop=F)
+head(s2_p)</code></pre>
+<pre><code>##   ID          b          g      r    nir
+## 1  1 0.04029999 0.06169999 0.0564 0.2464
+## 2  2 0.02719999 0.04130000 0.0303 0.2622
+## 3  3 0.02870000 0.03980000 0.0301 0.2559
+## 4  4 0.03450000 0.05069999 0.0497 0.2287
+## 5  5 0.03920000 0.05949999 0.0633 0.2364
+## 6  6 0.03960000 0.05729999 0.0643 0.2399</code></pre>
+<pre class="r"><code>vr_p &lt;- extract(v, points, drop=F)
+head(vr_p)</code></pre>
+<pre><code>##   ID          b          g          r       nir
+## 1  1 0.22268811 0.37329909 0.28506446 2.9043691
+## 2  2 0.08525706 0.11527783 0.08618615 1.2984504
+## 3  3 0.04848370 0.05874164 0.04805537 0.6412777
+## 4  4 0.02903999 0.03692298 0.02640304 0.5202775
+## 5  5 0.04280442 0.06025108 0.06453837 0.4539916
+## 6  6 0.04797903 0.06185437 0.08071577 0.4839757</code></pre>
+<pre class="r"><code>data &lt;- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
+library(randomForest)
+#S2 predicted high resolution output name
+s2h_name &lt;- paste0(Path_out,&#39;Mpolonjeni_S2_higres_Prediction.tif&#39;)
+if(!file.exists(s2h_name)){
+  UAV &lt;- rast(mosaicname)
+  names(UAV) &lt;- c(&quot;UAV.b&quot;, &quot;UAV.g&quot;, &quot;UAV.r&quot;, &quot;UAV.nir&quot;)
+  startTime &lt;- Sys.time() 
+  cat(&quot;Start time&quot;, format(startTime),&quot;\n&quot;)
+    s2h.b &lt;- predict(UAV, randomForest(S2.b~UAV.b, data=data), na.rm=T)
+    s2h.g &lt;- predict(UAV, randomForest(S2.g~UAV.g, data=data), na.rm=T)
+    s2h.r &lt;- predict(UAV, randomForest(S2.r~UAV.r, data=data), na.rm=T)
+    s2h.nir &lt;- predict(UAV, randomForest(S2.nir~UAV.nir, data=data), na.rm=T)
+  timeDiff &lt;- Sys.time() - startTime
+  cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)
+}</code></pre>
+<p>Stack all the S2 bands predictions.</p>
+<pre class="r"><code>if(!file.exists(s2h_name)){
+  #Stack them
+  s2h &lt;- c(s2h.b,s2h.g,s2h.r,s2h.nir)
+  names(s2h) &lt;- c(&quot;b&quot;, &quot;g&quot;,&quot;r&quot;, &quot;nir&quot;)
+  s2h
+  writeRaster(s2h, s2h_name)    
+}else{
+  s2h &lt;- rast(s2h_name)
+}</code></pre>
+<p>Fuse the simulated S2 high resolution image with UAV using median.</p>
+<pre class="r"><code>s2h.fused &lt;- mean(s2h, v)
+s2h.fused</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 3228, 2572, 4  (nrow, ncol, nlyr)
+## resolution  : 1, 1  (x, y)
+## extent      : 388657.1, 391229.1, 7070057, 7073285  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
+## source      : memory 
+## names       :          b,          g,          r,        nir 
+## min values  : 0.01559810, 0.02113883, 0.01805469, 0.04680591 
+## max values  :  0.6946765,  0.9916879,  1.1914342,  4.2903120</code></pre>
+<p>Classify and validate the fused product using MLC.</p>
+<pre class="r"><code>trainData.f &lt;- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData.f)</code></pre>
+<pre><code>##       class          b          g          r        nir
+## 1 waterbody 0.05148566 0.07174089 0.08392184 0.06202933
+## 2 waterbody 0.05252065 0.07593589 0.07918883 0.06892165
+## 3 waterbody 0.05252065 0.07593589 0.07918883 0.06892165
+## 4 waterbody 0.05244239 0.06607493 0.07917628 0.06993762
+## 5 waterbody 0.04930684 0.07292266 0.07878251 0.06993141
+## 6 waterbody 0.05244239 0.06607493 0.07917628 0.06993762</code></pre>
+<pre class="r"><code>valid.f &lt;- subset(trainData.f, split == FALSE) 
+train.f &lt;- subset(trainData.f, split == TRUE) 
+
+mlc.f &lt;- superClass(brick(s2h.fused), train.f, responseCol = &quot;class&quot;,
+                model = &quot;mlc&quot;, minDist = 1)
+val.f &lt;- validateMap(mlc.f$map, valid.f, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
+classMapping = mlc.f$classMapping)
+
+mlc.disp.f &lt;- display(mlc.f$map, &quot;S2 MLC&quot;, nClasses)
+
+mlc.disp.f</code></pre>
+<p><img src="mapping_files/figure-html/f6-1.png" width="672" /></p>
+<pre><code>## NULL</code></pre>
+<p>Validate the fused land-cover product.</p>
+<pre class="r"><code>List.f &lt;- accuracy(val.f)
+print(&#39;Accuracy measures comparison&#39;)</code></pre>
+<pre><code>## [1] &quot;Accuracy measures comparison&quot;</code></pre>
+<pre class="r"><code>data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3),Fused=round(List.f$OverallAcc[,1],3))</code></pre>
+<pre><code>##                  UAV    S2 Fused
+## Accuracy       0.947 0.818 0.911
+## Kappa          0.936 0.759 0.893
+## AccuracyLower  0.934 0.771 0.895
+## AccuracyUpper  0.958 0.858 0.925
+## AccuracyNull   0.247 0.418 0.247
+## AccuracyPValue 0.000 0.000 0.000
+## McnemarPValue    NaN   NaN   NaN</code></pre>
+<pre class="r"><code>data.frame(UAV_F1score=round(List.v$byClass[,&#39;F1&#39;],3),S2_F1score=round(List.s$byClass[,&#39;F1&#39;],3),Fused_F1score=round(List.f$byClass[,&#39;F1&#39;],3))</code></pre>
+<pre><code>##                     UAV_F1score S2_F1score Fused_F1score
+## Class: built_up           0.980      0.897         0.979
+## Class: cassava            0.988      1.000         0.911
+## Class: grass              0.789      0.390         0.763
+## Class: maize              0.880      0.571         0.831
+## Class: sorghum            0.925      0.571         0.786
+## Class: sweet_potato       0.990      0.933         0.968
+## Class: trees              0.960      0.924         0.915
+## Class: waterbody          0.982      1.000         0.991</code></pre>
+<pre class="r"><code>data.frame(UAV_UserAcc=round(List.v$byClass[,&#39;Precision&#39;],3),S2_UserAcc=round(List.s$byClass[,&#39;Precision&#39;],3),Fused_UserAcc=round(List.f$byClass[,&#39;Precision&#39;],3))</code></pre>
+<pre><code>##                     UAV_UserAcc S2_UserAcc Fused_UserAcc
+## Class: built_up           0.996      0.959         0.989
+## Class: cassava            1.000      1.000         0.854
+## Class: grass              0.690      0.471         0.652
+## Class: maize              0.877      0.467         0.848
+## Class: sorghum            0.889      0.421         0.669
+## Class: sweet_potato       0.992      0.875         0.983
+## Class: trees              0.982      0.991         0.977
+## Class: waterbody          1.000      1.000         1.000</code></pre>
+<pre class="r"><code>data.frame(UAV_ProducerAcc=round(List.v$byClass[,&#39;Sensitivity&#39;],3),S2_ProducerAcc=round(List.s$byClass[,&#39;Sensitivity&#39;],3), Fused_ProducerAcc=round(List.f$byClass[,&#39;Sensitivity&#39;],3))</code></pre>
+<pre><code>##                     UAV_ProducerAcc S2_ProducerAcc Fused_ProducerAcc
+## Class: built_up               0.965          0.843             0.968
+## Class: cassava                0.976          1.000             0.976
+## Class: grass                  0.921          0.333             0.921
+## Class: maize                  0.884          0.737             0.813
+## Class: sorghum                0.964          0.889             0.952
+## Class: sweet_potato           0.988          1.000             0.954
+## Class: trees                  0.940          0.865             0.860
+## Class: waterbody              0.964          1.000             0.982</code></pre>
+<p>It is clear that fusion improved the accuracy of Sentinel 2 classification but UAV still retained the highest accuracy. Do we probably need a better framework to reap the benefits fo fusion?</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
 <p>Breiman, L. Random Forests. <em>Machine Learning</em> 45, 5–32 (2001). <a href="https://doi.org/10.1023/A:1010933404324" class="uri">https://doi.org/10.1023/A:1010933404324</a></p>
+<p>Y. Zou, G. Li and S. Wang, “The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance,” <em>IEEE International Conference on Information and Automation (ICIA)</em>, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.</p>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>

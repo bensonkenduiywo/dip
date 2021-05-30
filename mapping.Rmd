@@ -39,16 +39,17 @@ Path_out    <- paste0(Root,"Output/")
 
 ```
 
-Load Mpolonjeni UAV images for mission 1--5 and Sentinel 2
+Load Mpolonjeni UAV images for mission 1--5 and Sentinel 2. We will mosaic the UAV images to one image at 1 m spatial resolution and save to disk later. Once this is done we skip this process every other time we ru the script.
 
 ```{r d2}
 #Sentinel 2
 path <- list.files(paste0(Root,'S2/interim/'),pattern = (".tif$"), recursive = TRUE, full.names = TRUE)
-path
 s <- rast(path)
 names(s) <- c("b", "g","r", "nir")
 s
 #UAV
+mosaicname <- paste0(Path_out,'Mpolonjeni_W1_Mosaic.tif')
+if(!file.exists(mosaicname)){
 folders <- list.dirs(paste0(Root,'WingtraOne/Mpolonjeni'),recursive=TRUE)[-1]
 folders 
 for (i in 1:length(folders)) {
@@ -63,43 +64,49 @@ for (i in 1:length(folders)) {
   names(temp) <- c("b", "g", "r", "nir")
   assign(paste0("v", i), temp) 
 }
+}else{
+  v <- rast(mosaicname)
+}
 
 ```
 
 We now have all the image missions loaded from corresponding sub-folders, stacked, and dynamically allocated variables i.e. $\text{v1},\text{v2},\dots,\text{v5}$. Resample all the images to 1 m spatial resolution using bilinear approach and mosaic them.
 
 ```{r d3}
-temp <- aggregate(v1[[1]], 9)
-res(temp) <- c(1, 1)
-v1 <- resample(v1, temp, method='bilinear')
-temp <- aggregate(v2[[1]], 9)
-res(temp) <- c(1, 1)
-v2 <- resample(v2, temp, method='bilinear')
-temp <- aggregate(v3[[1]], 9)
-res(temp) <- c(1, 1)
-v3 <- resample(v3, temp, method='bilinear')
-temp <- aggregate(v4[[1]], 9)
-res(temp) <- c(1, 1)
-v4 <- resample(v4, temp, method='bilinear')
-temp <- aggregate(v5[[1]], 9)
-res(temp) <- c(1, 1)
-v5 <- resample(v5, temp, method='bilinear')
-
+if(!file.exists(mosaicname)){
+  temp <- aggregate(v1[[1]], 9)
+  res(temp) <- c(1, 1)
+  v1 <- resample(v1, temp, method='bilinear')
+  temp <- aggregate(v2[[1]], 9)
+  res(temp) <- c(1, 1)
+  v2 <- resample(v2, temp, method='bilinear')
+  temp <- aggregate(v3[[1]], 9)
+  res(temp) <- c(1, 1)
+  v3 <- resample(v3, temp, method='bilinear')
+  temp <- aggregate(v4[[1]], 9)
+  res(temp) <- c(1, 1)
+  v4 <- resample(v4, temp, method='bilinear')
+  temp <- aggregate(v5[[1]], 9)
+  res(temp) <- c(1, 1)
+  v5 <- resample(v5, temp, method='bilinear')
+}
 ```
 
 Let's now mosaic the scenes to form one image. We will use median to average out the overlaps. Median is preferred because it has been shown to be robust to outliers compared to the mean.
 
 ```{r d4}
-v <- mosaic(v1, v2, v3, v4, v5, fun="median")
+if(!file.exists(mosaicname)){
+  v <- mosaic(v1, v2, v3, v4, v5, fun="median")
+}
 
 ```
 
 Save the mosaic to disk.
 
 ```{r d5}
-filename <- paste0(Path_out,'Mpolonjeni_W1_Mosaic.tif')
-if(!file.exists(filename)){
-  writeRaster(v, filename)	
+mosaicname <- paste0(Path_out,'Mpolonjeni_W1_Mosaic.tif')
+if(!file.exists(mosaicname)){
+  writeRaster(v, mosaicname)	
 }
 
 ```
@@ -170,44 +177,57 @@ x11()
 plotRGB(s, r="nir", g="r", b="g", stretch="lin", axes = TRUE, mar = c(4, 5, 1.4, 0.1))
 #points(samp, col="blue", cex=.5)
 lines(spTransform(ref, crs(s)), col="blue", lwd=1.5)
-add_legend("bottom", legend=c("Reference data", "No Data"), 
-pch=c(0,15), col=c("blue", "black"), horiz=T, bty='n', cex=1.1)
-   
+add_legend("bottom", legend="Reference data", 
+pch=c(0,15), col="blue", horiz=T, bty='n', cex=1.1)
 
 ```
 
-Extract S2 pixels values overlaid by points and split them into training and validation points.
+Extract UAV and S2 pixels values overlaid by points and split them into training and validation points.
 
 ```{r v5, message=FALSE}
-trainData <- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
-head(trainData)
+trainData.v <- extract(brick(v), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData.v)
+trainData.s <- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData.s)
 library(caTools)
 #(NB: 0.4 means 40% for training and 60% for validation)
-labels <- as.data.frame(trainData[,1])
+labels <- as.data.frame(trainData.v[,1])
 split <- sample.split(labels, SplitRatio = 0.4)
-valid <- subset(trainData, split == FALSE) 
-train <- subset(trainData, split == TRUE) 
-table(train$class)
-table(valid$class)
+#UAV
+valid.v <- subset(trainData.v, split == FALSE) 
+train.v <- subset(trainData.v, split == TRUE) 
+table(train.v$class)
+table(valid.v$class)
+#Sentinel 2
+valid.s <- subset(trainData.s, split == FALSE) 
+train.s <- subset(trainData.s, split == TRUE) 
+table(train.s$class)
+table(valid.s$class)
+
 ```
 
-## MLC
+## Maximum Likelihood Classification
 
-Classify S2 image using MLC algorithm.
+Classify UAV and S2 image using MLC algorithm.
 
-```{r mlc1}
-mlc.run <- superClass(brick(v), trainData, responseCol = "class",
+```{r mlc1, message=FALSE}
+#UAV classification
+mlc.uav <- superClass(brick(v), train.v, responseCol = "class",
                 model = "mlc", minDist = 1)
-val.test <- validateMap(mlc.run$map, valid, responseCol="class", mode='classification', 
-classMapping = mlc.run$classMapping)
+val.uav <- validateMap(mlc.uav$map, valid.v, responseCol="class", mode='classification', 
+classMapping = mlc.uav$classMapping)
+#Sentinel 2 classification
+mlc.s <- superClass(brick(s), train.s, responseCol = "class",
+                model = "mlc", minDist = 1)
+val.s <- validateMap(mlc.s$map, valid.s, responseCol="class", mode='classification', 
+classMapping = mlc.s$classMapping)
 ```
-
 
 Make a function to display classified images and use it to display the MLC map.
 
 ```{r disp}
 display <- function(map, method, nClasses){
-	windows()
+	x11()
 	par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
 	image(map, col=c("magenta", "darkgreen", "seagreen1" , "yellow", "darkseagreen", "green1",
 	"cyan","blue"), axes=T, ann=F)
@@ -217,13 +237,17 @@ display <- function(map, method, nClasses){
 'Maize',  'Sorghum', 'Sweet_potato','Trees','Water', "No data"), fill=classes.Palette(nClasses+1), ncol=3, bty='n', cex=1.1,  pt.bg = NA)
 	title(paste0(method," Classification"))
 }
-display(mlc.run$map, "MLC", nClasses)
+mlc.disp.v <- display(mlc.uav$map, "UAV MLC", nClasses)
+mlc.disp.s <- display(mlc.s$map, "S2 MLC", nClasses)
+
+mlc.disp.v
+mlc.disp.s
 ```
 
-Lets design a fucntion for accuracy assessment.
+Lets design a function for accuracy assessment.
 
 ```{r acc1}
-accuracy1 <- function(val.test){
+accuracy <- function(val.test){
 	assessment.storage <- val.test$performance 
 	#print(assessment.storage)
 	list_of_datasets <- list("ConfusionMatrix" = as.matrix(assessment.storage$table), 
@@ -231,25 +255,126 @@ accuracy1 <- function(val.test){
 					"byClass" = as.matrix(assessment.storage$byClass))
 	return(list_of_datasets)
 }
-
  
 ```
 
 Assess the accuracy of MLC.
 
 ```{r acc2}
-List <- accuracy1(val.test)
-#Confusion matrix
-List$ConfusionMatrix
-#Overall accuracy
-List$OverallAcc
-#user accuracy
-data.frame(Landcover=Classes[,-1],User=as.data.frame(List$byClass)[,'Precision'])
-#Producer accuracy
-data.frame(Landcover=Classes[,-1],Producer=as.data.frame(List$byClass)[,'Sensitivity'])
+print('UAV Confusion matrixs')
+List.v <- accuracy(val.uav)
+List.v$ConfusionMatrix
+print('S2 Confusion matrixs')
+List.s <- accuracy(val.s)
+List.s$ConfusionMatrix
+print('Other accuracy measures')
+data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3))
+data.frame(UAV_F1score=round(List.v$byClass[,'F1'],3),S2_F1score=round(List.s$byClass[,'F1'],3))
+data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_UserAcc=round(List.s$byClass[,'Precision'],3))
+data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3))
+
 ```
 
+Generally UAV gives better accuracy in most classes except for cassava and water where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let's consider a Zhou's fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.
+
+Downsample S2 to UAV 1 m spatial resolution using bilinear. 
+
+```{r f1}
+s_r <- resample(s,v,method="bilinear")
+```
+
+Now sample points from UAV MLC land-cover RF regression prediction.
+
+```{r f2}
+set.seed(530)
+points <- spatSample(rast(mlc.uav$map), 3000, "stratified", as.points=T, na.rm=T, values=F)
+```
+
+Use the stratified randomly sample points to train and predict simulated high resolution S2.
+
+```{r f3, message=FALSE}
+s2_p <- extract(s, points, drop=F)
+head(s2_p)
+vr_p <- extract(v, points, drop=F)
+head(vr_p)
+data <- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
+library(randomForest)
+#S2 predicted high resolution output name
+s2h_name <- paste0(Path_out,'Mpolonjeni_S2_higres_Prediction.tif')
+if(!file.exists(s2h_name)){
+  UAV <- rast(mosaicname)
+  names(UAV) <- c("UAV.b", "UAV.g", "UAV.r", "UAV.nir")
+  startTime <- Sys.time() 
+  cat("Start time", format(startTime),"\n")
+    s2h.b <- predict(UAV, randomForest(S2.b~UAV.b, data=data), na.rm=T)
+    s2h.g <- predict(UAV, randomForest(S2.g~UAV.g, data=data), na.rm=T)
+    s2h.r <- predict(UAV, randomForest(S2.r~UAV.r, data=data), na.rm=T)
+    s2h.nir <- predict(UAV, randomForest(S2.nir~UAV.nir, data=data), na.rm=T)
+  timeDiff <- Sys.time() - startTime
+  cat("\n Processing time", format(timeDiff), "\n")
+}
+```
+
+Stack all the S2 bands predictions. 
+
+```{r f4}
+if(!file.exists(s2h_name)){
+  #Stack them
+  s2h <- c(s2h.b,s2h.g,s2h.r,s2h.nir)
+  names(s2h) <- c("b", "g","r", "nir")
+  s2h
+  writeRaster(s2h, s2h_name)	
+}else{
+  s2h <- rast(s2h_name)
+}
+```
+
+Fuse the simulated S2 high resolution image with UAV using median.
+
+```{r f5}
+s2h.fused <- mean(s2h, v)
+s2h.fused
+
+```
+
+Classify and validate the fused product using MLC.
+
+```{r f6}
+trainData.f <- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
+head(trainData.f)
+valid.f <- subset(trainData.f, split == FALSE) 
+train.f <- subset(trainData.f, split == TRUE) 
+
+mlc.f <- superClass(brick(s2h.fused), train.f, responseCol = "class",
+                model = "mlc", minDist = 1)
+val.f <- validateMap(mlc.f$map, valid.f, responseCol="class", mode='classification', 
+classMapping = mlc.f$classMapping)
+
+mlc.disp.f <- display(mlc.f$map, "S2 MLC", nClasses)
+
+mlc.disp.f
+
+```
+
+Validate the fused land-cover product.
+
+```{r f7}
+List.f <- accuracy(val.f)
+print('Accuracy measures comparison')
+data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3),Fused=round(List.f$OverallAcc[,1],3))
+
+data.frame(UAV_F1score=round(List.v$byClass[,'F1'],3),S2_F1score=round(List.s$byClass[,'F1'],3),Fused_F1score=round(List.f$byClass[,'F1'],3))
+
+data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_UserAcc=round(List.s$byClass[,'Precision'],3),Fused_UserAcc=round(List.f$byClass[,'Precision'],3))
+
+data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3), Fused_ProducerAcc=round(List.f$byClass[,'Sensitivity'],3))
+
+```
+
+It is clear that fusion improved the accuracy of Sentinel 2 classification but UAV still retained the highest accuracy. Do we probably need a better framework to reap the benefits fo fusion? 
 
 ## References
 
-Breiman, L. Random Forests. *Machine Learning* 45, 5–32 (2001). https://doi.org/10.1023/A:1010933404324
+Breiman, L. Random Forests. *Machine Learning* 45, 5--32 (2001). https://doi.org/10.1023/A:1010933404324
+
+Y. Zou, G. Li and S. Wang, "The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance," *IEEE International Conference on Information and Automation (ICIA)*, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.
