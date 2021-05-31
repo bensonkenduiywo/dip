@@ -256,7 +256,7 @@ svm.model <- svm(S2.b~UAV.b, data=data)
 svm.pred <- predict(svm.model, data)
 #SVM
 library(randomForest)
-rfmod <- randomForest(S2.b~UAV.b, data=data)
+rfmod <- randomForest(S2.b~UAV.b, data=data, ntree=300)
 rf.pred <- predict(rfmod, data)
 x11()
 plot(S2.b~UAV.b,data, pch=16)

@@ -196,13 +196,13 @@ split <- sample.split(labels, SplitRatio = 0.4)
 #UAV
 valid.v <- subset(trainData.v, split == FALSE) 
 train.v <- subset(trainData.v, split == TRUE) 
-knitr::kable(table(train.v$class))
-knitr::kable(table(valid.v$class))
+knitr::kable(table(train.v$class), align = 'l')
+knitr::kable(table(valid.v$class), align = 'l')
 #Sentinel 2
 valid.s <- subset(trainData.s, split == FALSE) 
 train.s <- subset(trainData.s, split == TRUE) 
-knitr::kable(table(train.s$class))
-knitr::kable(table(valid.s$class))
+knitr::kable(table(train.s$class), align = 'l')
+knitr::kable(table(valid.s$class), align = 'l')
 
 ```
 
@@ -263,19 +263,19 @@ Assess the accuracy of MLC.
 ```{r acc2}
 print('UAV Confusion matrixs')
 List.v <- accuracy(val.uav)
-knitr::kable(List.v$ConfusionMatrix)
+knitr::kable(List.v$ConfusionMatrix,align='l')
 print('S2 Confusion matrixs')
 List.s <- accuracy(val.s)
-knitr::kable(List.s$ConfusionMatrix)
+knitr::kable(List.s$ConfusionMatrix,align='l')
 
 print('Other accuracy measures')
-knitr::kable(data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3)))
+knitr::kable(data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3)),align='l')
 
-knitr::kable(data.frame(UAV_F1score=round(List.v$byClass[,'F1'],3),S2_F1score=round(List.s$byClass[,'F1'],3)))
+knitr::kable(data.frame(UAV_F1score=round(List.v$byClass[,'F1'],3),S2_F1score=round(List.s$byClass[,'F1'],3)),align='l')
 
-knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_UserAcc=round(List.s$byClass[,'Precision'],3)))
+knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_UserAcc=round(List.s$byClass[,'Precision'],3)),align='l')
 
-knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3)))
+knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3)),align='l')
 
 ```
 
@@ -298,9 +298,9 @@ Use the stratified randomly sample points to train and predict simulated high re
 
 ```{r f3, message=FALSE}
 s2_p <- extract(s_r, points, drop=F)
-head(s2_p)
+knitr::kable(head(s2_p), align = 'l')
 vr_p <- extract(v, points, drop=F)
-head(vr_p)
+knitr::kable(head(vr_p), align = 'l')
 data <- data.frame(S2=s2_p[,-1], UAV=vr_p[,-1])
 library(randomForest)
 #S2 predicted high resolution output name
@@ -345,7 +345,7 @@ Classify and validate the fused product using MLC.
 
 ```{r f6}
 trainData.f <- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
-head(trainData.f)
+knitr::kable(head(trainData.f), align = 'l')
 valid.f <- subset(trainData.f, split == FALSE) 
 train.f <- subset(trainData.f, split == TRUE) 
 
@@ -365,13 +365,13 @@ Validate the fused land-cover product.
 ```{r f7}
 List.f <- accuracy(val.f)
 print('Accuracy measures comparison')
-data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3),Fused=round(List.f$OverallAcc[,1],3))
+knitr::kable(data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3),Fused=round(List.f$OverallAcc[,1],3)),align='l')
 
-knitr::kable(data.frame(UAV_F1score=round(List.v$byClass[,'F1'],3),S2_F1score=round(List.s$byClass[,'F1'],3),Fused_F1score=round(List.f$byClass[,'F1'],3)))
+knitr::kable(data.frame(UAV_F1score=round(List.v$byClass[,'F1'],3),S2_F1score=round(List.s$byClass[,'F1'],3),Fused_F1score=round(List.f$byClass[,'F1'],3)),align='l')
 
-knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_UserAcc=round(List.s$byClass[,'Precision'],3),Fused_UserAcc=round(List.f$byClass[,'Precision'],3)))
+knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_UserAcc=round(List.s$byClass[,'Precision'],3),Fused_UserAcc=round(List.f$byClass[,'Precision'],3)),align='l')
 
-knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3), Fused_ProducerAcc=round(List.f$byClass[,'Sensitivity'],3)))
+knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3), Fused_ProducerAcc=round(List.f$byClass[,'Sensitivity'],3)), align = 'l')
 
 
 ```
