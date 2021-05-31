@@ -466,6 +466,7 @@ for (i in 1:length(folders)) {
 <pre class="r"><code>if(!file.exists(mosaicname)){
   v &lt;- mosaic(v1, v2, v3, v4, v5, fun=&quot;median&quot;)
 }</code></pre>
+<pre><code>## Warning: [mosaic] rasters did not align and were resampled</code></pre>
 <p>Save the mosaic to disk.</p>
 <pre class="r"><code>mosaicname &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
 if(!file.exists(mosaicname)){
@@ -528,23 +529,119 @@ pch=c(0,15), col=&quot;blue&quot;, horiz=T, bty=&#39;n&#39;, cex=1.1)</code></pr
 <p><img src="mapping_files/figure-html/v4-1.png" width="672" /></p>
 <p>Extract UAV and S2 pixels values overlaid by points and split them into training and validation points.</p>
 <pre class="r"><code>trainData.v &lt;- extract(brick(v), samp, cellnumbers=F, df=T, sp=T) 
-head(trainData.v)</code></pre>
-<pre><code>##       class          b          g          r        nir
-## 1 waterbody 0.06256156 0.09644703 0.09899782 0.08365054
-## 2 waterbody 0.06439328 0.09717349 0.10095690 0.08490235
-## 3 waterbody 0.06439328 0.09717349 0.10095690 0.08490235
-## 4 waterbody 0.06425814 0.09694316 0.10035420 0.08650444
-## 5 waterbody 0.06456918 0.09819815 0.10220221 0.08649202
-## 6 waterbody 0.06425814 0.09694316 0.10035420 0.08650444</code></pre>
+knitr::kable(head(trainData.v))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">class</th>
+<th align="right">b</th>
+<th align="right">g</th>
+<th align="right">r</th>
+<th align="right">nir</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">0.0625616</td>
+<td align="right">0.0964470</td>
+<td align="right">0.0989978</td>
+<td align="right">0.0836505</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0.0643933</td>
+<td align="right">0.0971735</td>
+<td align="right">0.1009569</td>
+<td align="right">0.0849024</td>
+</tr>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">0.0643933</td>
+<td align="right">0.0971735</td>
+<td align="right">0.1009569</td>
+<td align="right">0.0849024</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0.0642581</td>
+<td align="right">0.0969432</td>
+<td align="right">0.1003542</td>
+<td align="right">0.0865044</td>
+</tr>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">0.0645692</td>
+<td align="right">0.0981981</td>
+<td align="right">0.1022022</td>
+<td align="right">0.0864920</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0.0642581</td>
+<td align="right">0.0969432</td>
+<td align="right">0.1003542</td>
+<td align="right">0.0865044</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>trainData.s &lt;- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
-head(trainData.s)</code></pre>
-<pre><code>##       class          b      g     r    nir
-## 1 waterbody 0.02279999 0.0253 0.024 0.0227
-## 2 waterbody 0.02279999 0.0253 0.024 0.0227
-## 3 waterbody 0.02279999 0.0253 0.024 0.0227
-## 4 waterbody 0.02279999 0.0253 0.024 0.0227
-## 5 waterbody 0.02279999 0.0253 0.024 0.0227
-## 6 waterbody 0.02279999 0.0253 0.024 0.0227</code></pre>
+knitr::kable(head(trainData.s))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">class</th>
+<th align="right">b</th>
+<th align="right">g</th>
+<th align="right">r</th>
+<th align="right">nir</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">0.0228</td>
+<td align="right">0.0253</td>
+<td align="right">0.024</td>
+<td align="right">0.0227</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0.0228</td>
+<td align="right">0.0253</td>
+<td align="right">0.024</td>
+<td align="right">0.0227</td>
+</tr>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">0.0228</td>
+<td align="right">0.0253</td>
+<td align="right">0.024</td>
+<td align="right">0.0227</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0.0228</td>
+<td align="right">0.0253</td>
+<td align="right">0.024</td>
+<td align="right">0.0227</td>
+</tr>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">0.0228</td>
+<td align="right">0.0253</td>
+<td align="right">0.024</td>
+<td align="right">0.0227</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0.0228</td>
+<td align="right">0.0253</td>
+<td align="right">0.024</td>
+<td align="right">0.0227</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>library(caTools)
 #(NB: 0.4 means 40% for training and 60% for validation)
 labels &lt;- as.data.frame(trainData.v[,1])
@@ -552,33 +649,181 @@ split &lt;- sample.split(labels, SplitRatio = 0.4)
 #UAV
 valid.v &lt;- subset(trainData.v, split == FALSE) 
 train.v &lt;- subset(trainData.v, split == TRUE) 
-table(train.v$class)</code></pre>
-<pre><code>## 
-##     built_up      cassava        grass        maize      sorghum sweet_potato 
-##          248           35           46          240           75          244 
-##        trees    waterbody 
-##          321          118</code></pre>
-<pre class="r"><code>table(valid.v$class)</code></pre>
-<pre><code>## 
-##     built_up      cassava        grass        maize      sorghum sweet_potato 
-##          488           72           98          475          154          485 
-##        trees    waterbody 
-##          646          235</code></pre>
+knitr::kable(table(train.v$class))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="right">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="right">248</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="right">35</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="right">46</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="right">240</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="right">75</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="right">244</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="right">321</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">118</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(table(valid.v$class))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="right">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="right">488</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="right">72</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="right">98</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="right">475</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="right">154</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="right">485</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="right">646</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">235</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>#Sentinel 2
 valid.s &lt;- subset(trainData.s, split == FALSE) 
 train.s &lt;- subset(trainData.s, split == TRUE) 
-table(train.s$class)</code></pre>
-<pre><code>## 
-##     built_up      cassava        grass        maize      sorghum sweet_potato 
-##          248           35           46          240           75          244 
-##        trees    waterbody 
-##          321          118</code></pre>
-<pre class="r"><code>table(valid.s$class)</code></pre>
-<pre><code>## 
-##     built_up      cassava        grass        maize      sorghum sweet_potato 
-##          488           72           98          475          154          485 
-##        trees    waterbody 
-##          646          235</code></pre>
+knitr::kable(table(train.s$class))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="right">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="right">248</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="right">35</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="right">46</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="right">240</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="right">75</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="right">244</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="right">321</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">118</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(table(valid.s$class))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="right">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="right">488</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="right">72</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="right">98</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="right">475</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="right">154</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="right">485</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="right">646</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">235</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="maximum-likelihood-classification" class="section level2">
 <h2>Maximum Likelihood Classification</h2>
@@ -626,92 +871,426 @@ mlc.disp.v</code></pre>
 <pre class="r"><code>print(&#39;UAV Confusion matrixs&#39;)</code></pre>
 <pre><code>## [1] &quot;UAV Confusion matrixs&quot;</code></pre>
 <pre class="r"><code>List.v &lt;- accuracy(val.uav)
-List.v$ConfusionMatrix</code></pre>
-<pre><code>##               Reference
-## Prediction     built_up cassava grass maize sorghum sweet_potato trees
-##   built_up          274       0     0     0       0            0     1
-##   cassava             0      41     0     0       0            0     0
-##   grass               0       0    58    20       0            0     6
-##   maize              10       0     2   213       3            0    11
-##   sorghum             0       0     0     8      80            0     2
-##   sweet_potato        0       1     0     0       0          237     1
-##   trees               0       0     3     0       0            3   328
-##   waterbody           0       0     0     0       0            0     0
-##               Reference
-## Prediction     waterbody
-##   built_up             0
-##   cassava              0
-##   grass                0
-##   maize                4
-##   sorghum              0
-##   sweet_potato         0
-##   trees                0
-##   waterbody          107</code></pre>
+knitr::kable(List.v$ConfusionMatrix)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">built_up</th>
+<th align="right">cassava</th>
+<th align="right">grass</th>
+<th align="right">maize</th>
+<th align="right">sorghum</th>
+<th align="right">sweet_potato</th>
+<th align="right">trees</th>
+<th align="right">waterbody</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="right">274</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="right">0</td>
+<td align="right">41</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">58</td>
+<td align="right">20</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">6</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="right">10</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">213</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">11</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">80</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">237</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">328</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">107</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>print(&#39;S2 Confusion matrixs&#39;)</code></pre>
 <pre><code>## [1] &quot;S2 Confusion matrixs&quot;</code></pre>
 <pre class="r"><code>List.s &lt;- accuracy(val.s)
-List.s$ConfusionMatrix</code></pre>
-<pre><code>##               Reference
-## Prediction     built_up cassava grass maize sorghum sweet_potato trees
-##   built_up           70       0     0     1       0            0     2
-##   cassava             0       9     0     0       0            0     0
-##   grass               4       0     8     4       0            0     1
-##   maize               7       0    15    28       1            0     9
-##   sorghum             2       0     1     4       8            0     4
-##   sweet_potato        0       0     0     0       0           14     2
-##   trees               0       0     0     1       0            0   115
-##   waterbody           0       0     0     0       0            0     0
-##               Reference
-## Prediction     waterbody
-##   built_up             0
-##   cassava              0
-##   grass                0
-##   maize                0
-##   sorghum              0
-##   sweet_potato         0
-##   trees                0
-##   waterbody            8</code></pre>
+knitr::kable(List.s$ConfusionMatrix)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">built_up</th>
+<th align="right">cassava</th>
+<th align="right">grass</th>
+<th align="right">maize</th>
+<th align="right">sorghum</th>
+<th align="right">sweet_potato</th>
+<th align="right">trees</th>
+<th align="right">waterbody</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="right">70</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="right">0</td>
+<td align="right">9</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="right">4</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">4</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="right">7</td>
+<td align="right">0</td>
+<td align="right">15</td>
+<td align="right">28</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">9</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">8</td>
+<td align="right">0</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">14</td>
+<td align="right">2</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">115</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">8</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>print(&#39;Other accuracy measures&#39;)</code></pre>
 <pre><code>## [1] &quot;Other accuracy measures&quot;</code></pre>
-<pre class="r"><code>data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3))</code></pre>
-<pre><code>##                  UAV    S2
-## Accuracy       0.947 0.818
-## Kappa          0.936 0.759
-## AccuracyLower  0.934 0.771
-## AccuracyUpper  0.958 0.858
-## AccuracyNull   0.247 0.418
-## AccuracyPValue 0.000 0.000
-## McnemarPValue    NaN   NaN</code></pre>
-<pre class="r"><code>data.frame(UAV_F1score=round(List.v$byClass[,&#39;F1&#39;],3),S2_F1score=round(List.s$byClass[,&#39;F1&#39;],3))</code></pre>
-<pre><code>##                     UAV_F1score S2_F1score
-## Class: built_up           0.980      0.897
-## Class: cassava            0.988      1.000
-## Class: grass              0.789      0.390
-## Class: maize              0.880      0.571
-## Class: sorghum            0.925      0.571
-## Class: sweet_potato       0.990      0.933
-## Class: trees              0.960      0.924
-## Class: waterbody          0.982      1.000</code></pre>
-<pre class="r"><code>data.frame(UAV_UserAcc=round(List.v$byClass[,&#39;Precision&#39;],3),S2_UserAcc=round(List.s$byClass[,&#39;Precision&#39;],3))</code></pre>
-<pre><code>##                     UAV_UserAcc S2_UserAcc
-## Class: built_up           0.996      0.959
-## Class: cassava            1.000      1.000
-## Class: grass              0.690      0.471
-## Class: maize              0.877      0.467
-## Class: sorghum            0.889      0.421
-## Class: sweet_potato       0.992      0.875
-## Class: trees              0.982      0.991
-## Class: waterbody          1.000      1.000</code></pre>
-<pre class="r"><code>data.frame(UAV_ProducerAcc=round(List.v$byClass[,&#39;Sensitivity&#39;],3),S2_ProducerAcc=round(List.s$byClass[,&#39;Sensitivity&#39;],3))</code></pre>
-<pre><code>##                     UAV_ProducerAcc S2_ProducerAcc
-## Class: built_up               0.965          0.843
-## Class: cassava                0.976          1.000
-## Class: grass                  0.921          0.333
-## Class: maize                  0.884          0.737
-## Class: sorghum                0.964          0.889
-## Class: sweet_potato           0.988          1.000
-## Class: trees                  0.940          0.865
-## Class: waterbody              0.964          1.000</code></pre>
+<pre class="r"><code>knitr::kable(data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV</th>
+<th align="right">S2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Accuracy</td>
+<td align="right">0.947</td>
+<td align="right">0.818</td>
+</tr>
+<tr class="even">
+<td align="left">Kappa</td>
+<td align="right">0.936</td>
+<td align="right">0.759</td>
+</tr>
+<tr class="odd">
+<td align="left">AccuracyLower</td>
+<td align="right">0.934</td>
+<td align="right">0.771</td>
+</tr>
+<tr class="even">
+<td align="left">AccuracyUpper</td>
+<td align="right">0.958</td>
+<td align="right">0.858</td>
+</tr>
+<tr class="odd">
+<td align="left">AccuracyNull</td>
+<td align="right">0.247</td>
+<td align="right">0.418</td>
+</tr>
+<tr class="even">
+<td align="left">AccuracyPValue</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">McnemarPValue</td>
+<td align="right">NaN</td>
+<td align="right">NaN</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(data.frame(UAV_F1score=round(List.v$byClass[,&#39;F1&#39;],3),S2_F1score=round(List.s$byClass[,&#39;F1&#39;],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV_F1score</th>
+<th align="right">S2_F1score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: built_up</td>
+<td align="right">0.980</td>
+<td align="right">0.897</td>
+</tr>
+<tr class="even">
+<td align="left">Class: cassava</td>
+<td align="right">0.988</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: grass</td>
+<td align="right">0.789</td>
+<td align="right">0.390</td>
+</tr>
+<tr class="even">
+<td align="left">Class: maize</td>
+<td align="right">0.880</td>
+<td align="right">0.571</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: sorghum</td>
+<td align="right">0.925</td>
+<td align="right">0.571</td>
+</tr>
+<tr class="even">
+<td align="left">Class: sweet_potato</td>
+<td align="right">0.990</td>
+<td align="right">0.933</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: trees</td>
+<td align="right">0.960</td>
+<td align="right">0.924</td>
+</tr>
+<tr class="even">
+<td align="left">Class: waterbody</td>
+<td align="right">0.982</td>
+<td align="right">1.000</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,&#39;Precision&#39;],3),S2_UserAcc=round(List.s$byClass[,&#39;Precision&#39;],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV_UserAcc</th>
+<th align="right">S2_UserAcc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: built_up</td>
+<td align="right">0.996</td>
+<td align="right">0.959</td>
+</tr>
+<tr class="even">
+<td align="left">Class: cassava</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: grass</td>
+<td align="right">0.690</td>
+<td align="right">0.471</td>
+</tr>
+<tr class="even">
+<td align="left">Class: maize</td>
+<td align="right">0.877</td>
+<td align="right">0.467</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: sorghum</td>
+<td align="right">0.889</td>
+<td align="right">0.421</td>
+</tr>
+<tr class="even">
+<td align="left">Class: sweet_potato</td>
+<td align="right">0.992</td>
+<td align="right">0.875</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: trees</td>
+<td align="right">0.982</td>
+<td align="right">0.991</td>
+</tr>
+<tr class="even">
+<td align="left">Class: waterbody</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,&#39;Sensitivity&#39;],3),S2_ProducerAcc=round(List.s$byClass[,&#39;Sensitivity&#39;],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV_ProducerAcc</th>
+<th align="right">S2_ProducerAcc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: built_up</td>
+<td align="right">0.965</td>
+<td align="right">0.843</td>
+</tr>
+<tr class="even">
+<td align="left">Class: cassava</td>
+<td align="right">0.976</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: grass</td>
+<td align="right">0.921</td>
+<td align="right">0.333</td>
+</tr>
+<tr class="even">
+<td align="left">Class: maize</td>
+<td align="right">0.884</td>
+<td align="right">0.737</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: sorghum</td>
+<td align="right">0.964</td>
+<td align="right">0.889</td>
+</tr>
+<tr class="even">
+<td align="left">Class: sweet_potato</td>
+<td align="right">0.988</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: trees</td>
+<td align="right">0.940</td>
+<td align="right">0.865</td>
+</tr>
+<tr class="even">
+<td align="left">Class: waterbody</td>
+<td align="right">0.964</td>
+<td align="right">1.000</td>
+</tr>
+</tbody>
+</table>
 <p>Generally UAV gives better accuracy in most classes except for cassava and water where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let’s consider a Zhou’s fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.</p>
 <p>Downsample S2 to UAV 1 m spatial resolution using bilinear.</p>
 <pre class="r"><code>s_r &lt;- resample(s,v,method=&quot;bilinear&quot;)</code></pre>
@@ -719,15 +1298,15 @@ List.s$ConfusionMatrix</code></pre>
 <pre class="r"><code>set.seed(530)
 points &lt;- spatSample(rast(mlc.uav$map), 3000, &quot;stratified&quot;, as.points=T, na.rm=T, values=F)</code></pre>
 <p>Use the stratified randomly sample points to train and predict simulated high resolution S2.</p>
-<pre class="r"><code>s2_p &lt;- extract(s, points, drop=F)
+<pre class="r"><code>s2_p &lt;- extract(s_r, points, drop=F)
 head(s2_p)</code></pre>
-<pre><code>##   ID          b          g      r    nir
-## 1  1 0.04029999 0.06169999 0.0564 0.2464
-## 2  2 0.02719999 0.04130000 0.0303 0.2622
-## 3  3 0.02870000 0.03980000 0.0301 0.2559
-## 4  4 0.03450000 0.05069999 0.0497 0.2287
-## 5  5 0.03920000 0.05949999 0.0633 0.2364
-## 6  6 0.03960000 0.05729999 0.0643 0.2399</code></pre>
+<pre><code>##   ID          b          g          r       nir
+## 1  1 0.03931969 0.06022158 0.05626059 0.2464113
+## 2  2 0.02765247 0.04082294 0.03027596 0.2619595
+## 3  3 0.02806851 0.03938122 0.03019734 0.2556855
+## 4  4 0.03481080 0.05083125 0.05013980 0.2338444
+## 5  5 0.03914528 0.05997897 0.06341168 0.2391077
+## 6  6 0.03911832 0.05778734 0.06383654 0.2426294</code></pre>
 <pre class="r"><code>vr_p &lt;- extract(v, points, drop=F)
 head(vr_p)</code></pre>
 <pre><code>##   ID          b          g          r       nir
@@ -753,6 +1332,9 @@ if(!file.exists(s2h_name)){
   timeDiff &lt;- Sys.time() - startTime
   cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)
 }</code></pre>
+<pre><code>## Start time 2021-05-31 22:29:53 
+## 
+##  Processing time 17.69093 mins</code></pre>
 <p>Stack all the S2 bands predictions.</p>
 <pre class="r"><code>if(!file.exists(s2h_name)){
   #Stack them
@@ -773,18 +1355,18 @@ s2h.fused</code></pre>
 ## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
 ## source      : memory 
 ## names       :          b,          g,          r,        nir 
-## min values  : 0.01559810, 0.02113883, 0.01805469, 0.04680591 
-## max values  :  0.6946765,  0.9916879,  1.1914342,  4.2903120</code></pre>
+## min values  : 0.01523425, 0.02410997, 0.01786738, 0.04583284 
+## max values  :  0.6900882,  0.9910878,  1.1898665,  4.2925071</code></pre>
 <p>Classify and validate the fused product using MLC.</p>
 <pre class="r"><code>trainData.f &lt;- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
 head(trainData.f)</code></pre>
 <pre><code>##       class          b          g          r        nir
-## 1 waterbody 0.05148566 0.07174089 0.08392184 0.06202933
-## 2 waterbody 0.05252065 0.07593589 0.07918883 0.06892165
-## 3 waterbody 0.05252065 0.07593589 0.07918883 0.06892165
-## 4 waterbody 0.05244239 0.06607493 0.07917628 0.06993762
-## 5 waterbody 0.04930684 0.07292266 0.07878251 0.06993141
-## 6 waterbody 0.05244239 0.06607493 0.07917628 0.06993762</code></pre>
+## 1 waterbody 0.05107536 0.07161806 0.08527915 0.06104381
+## 2 waterbody 0.05275128 0.07578622 0.07802513 0.06754533
+## 3 waterbody 0.05275128 0.07578622 0.07802513 0.06754533
+## 4 waterbody 0.05258103 0.06567291 0.08074489 0.06950981
+## 5 waterbody 0.04913940 0.07316730 0.07881116 0.06950360
+## 6 waterbody 0.05258103 0.06567291 0.08074489 0.06950981</code></pre>
 <pre class="r"><code>valid.f &lt;- subset(trainData.f, split == FALSE) 
 train.f &lt;- subset(trainData.f, split == TRUE) 
 
@@ -804,43 +1386,196 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <pre><code>## [1] &quot;Accuracy measures comparison&quot;</code></pre>
 <pre class="r"><code>data.frame(Type=List.v$OverallAcc[,0], UAV=round(List.v$OverallAcc[,1],3),S2=round(List.s$OverallAcc[,1],3),Fused=round(List.f$OverallAcc[,1],3))</code></pre>
 <pre><code>##                  UAV    S2 Fused
-## Accuracy       0.947 0.818 0.911
-## Kappa          0.936 0.759 0.893
-## AccuracyLower  0.934 0.771 0.895
-## AccuracyUpper  0.958 0.858 0.925
+## Accuracy       0.947 0.818 0.912
+## Kappa          0.936 0.759 0.895
+## AccuracyLower  0.934 0.771 0.896
+## AccuracyUpper  0.958 0.858 0.926
 ## AccuracyNull   0.247 0.418 0.247
 ## AccuracyPValue 0.000 0.000 0.000
 ## McnemarPValue    NaN   NaN   NaN</code></pre>
-<pre class="r"><code>data.frame(UAV_F1score=round(List.v$byClass[,&#39;F1&#39;],3),S2_F1score=round(List.s$byClass[,&#39;F1&#39;],3),Fused_F1score=round(List.f$byClass[,&#39;F1&#39;],3))</code></pre>
-<pre><code>##                     UAV_F1score S2_F1score Fused_F1score
-## Class: built_up           0.980      0.897         0.979
-## Class: cassava            0.988      1.000         0.911
-## Class: grass              0.789      0.390         0.763
-## Class: maize              0.880      0.571         0.831
-## Class: sorghum            0.925      0.571         0.786
-## Class: sweet_potato       0.990      0.933         0.968
-## Class: trees              0.960      0.924         0.915
-## Class: waterbody          0.982      1.000         0.991</code></pre>
-<pre class="r"><code>data.frame(UAV_UserAcc=round(List.v$byClass[,&#39;Precision&#39;],3),S2_UserAcc=round(List.s$byClass[,&#39;Precision&#39;],3),Fused_UserAcc=round(List.f$byClass[,&#39;Precision&#39;],3))</code></pre>
-<pre><code>##                     UAV_UserAcc S2_UserAcc Fused_UserAcc
-## Class: built_up           0.996      0.959         0.989
-## Class: cassava            1.000      1.000         0.854
-## Class: grass              0.690      0.471         0.652
-## Class: maize              0.877      0.467         0.848
-## Class: sorghum            0.889      0.421         0.669
-## Class: sweet_potato       0.992      0.875         0.983
-## Class: trees              0.982      0.991         0.977
-## Class: waterbody          1.000      1.000         1.000</code></pre>
-<pre class="r"><code>data.frame(UAV_ProducerAcc=round(List.v$byClass[,&#39;Sensitivity&#39;],3),S2_ProducerAcc=round(List.s$byClass[,&#39;Sensitivity&#39;],3), Fused_ProducerAcc=round(List.f$byClass[,&#39;Sensitivity&#39;],3))</code></pre>
-<pre><code>##                     UAV_ProducerAcc S2_ProducerAcc Fused_ProducerAcc
-## Class: built_up               0.965          0.843             0.968
-## Class: cassava                0.976          1.000             0.976
-## Class: grass                  0.921          0.333             0.921
-## Class: maize                  0.884          0.737             0.813
-## Class: sorghum                0.964          0.889             0.952
-## Class: sweet_potato           0.988          1.000             0.954
-## Class: trees                  0.940          0.865             0.860
-## Class: waterbody              0.964          1.000             0.982</code></pre>
+<pre class="r"><code>knitr::kable(data.frame(UAV_F1score=round(List.v$byClass[,&#39;F1&#39;],3),S2_F1score=round(List.s$byClass[,&#39;F1&#39;],3),Fused_F1score=round(List.f$byClass[,&#39;F1&#39;],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV_F1score</th>
+<th align="right">S2_F1score</th>
+<th align="right">Fused_F1score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: built_up</td>
+<td align="right">0.980</td>
+<td align="right">0.897</td>
+<td align="right">0.979</td>
+</tr>
+<tr class="even">
+<td align="left">Class: cassava</td>
+<td align="right">0.988</td>
+<td align="right">1.000</td>
+<td align="right">0.909</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: grass</td>
+<td align="right">0.789</td>
+<td align="right">0.390</td>
+<td align="right">0.771</td>
+</tr>
+<tr class="even">
+<td align="left">Class: maize</td>
+<td align="right">0.880</td>
+<td align="right">0.571</td>
+<td align="right">0.840</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: sorghum</td>
+<td align="right">0.925</td>
+<td align="right">0.571</td>
+<td align="right">0.802</td>
+</tr>
+<tr class="even">
+<td align="left">Class: sweet_potato</td>
+<td align="right">0.990</td>
+<td align="right">0.933</td>
+<td align="right">0.964</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: trees</td>
+<td align="right">0.960</td>
+<td align="right">0.924</td>
+<td align="right">0.910</td>
+</tr>
+<tr class="even">
+<td align="left">Class: waterbody</td>
+<td align="right">0.982</td>
+<td align="right">1.000</td>
+<td align="right">0.991</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,&#39;Precision&#39;],3),S2_UserAcc=round(List.s$byClass[,&#39;Precision&#39;],3),Fused_UserAcc=round(List.f$byClass[,&#39;Precision&#39;],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV_UserAcc</th>
+<th align="right">S2_UserAcc</th>
+<th align="right">Fused_UserAcc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: built_up</td>
+<td align="right">0.996</td>
+<td align="right">0.959</td>
+<td align="right">0.989</td>
+</tr>
+<tr class="even">
+<td align="left">Class: cassava</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">0.870</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: grass</td>
+<td align="right">0.690</td>
+<td align="right">0.471</td>
+<td align="right">0.656</td>
+</tr>
+<tr class="even">
+<td align="left">Class: maize</td>
+<td align="right">0.877</td>
+<td align="right">0.467</td>
+<td align="right">0.851</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: sorghum</td>
+<td align="right">0.889</td>
+<td align="right">0.421</td>
+<td align="right">0.693</td>
+</tr>
+<tr class="even">
+<td align="left">Class: sweet_potato</td>
+<td align="right">0.992</td>
+<td align="right">0.875</td>
+<td align="right">0.974</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: trees</td>
+<td align="right">0.982</td>
+<td align="right">0.991</td>
+<td align="right">0.974</td>
+</tr>
+<tr class="even">
+<td align="left">Class: waterbody</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+<td align="right">1.000</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,&#39;Sensitivity&#39;],3),S2_ProducerAcc=round(List.s$byClass[,&#39;Sensitivity&#39;],3), Fused_ProducerAcc=round(List.f$byClass[,&#39;Sensitivity&#39;],3)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">UAV_ProducerAcc</th>
+<th align="right">S2_ProducerAcc</th>
+<th align="right">Fused_ProducerAcc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: built_up</td>
+<td align="right">0.965</td>
+<td align="right">0.843</td>
+<td align="right">0.968</td>
+</tr>
+<tr class="even">
+<td align="left">Class: cassava</td>
+<td align="right">0.976</td>
+<td align="right">1.000</td>
+<td align="right">0.952</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: grass</td>
+<td align="right">0.921</td>
+<td align="right">0.333</td>
+<td align="right">0.937</td>
+</tr>
+<tr class="even">
+<td align="left">Class: maize</td>
+<td align="right">0.884</td>
+<td align="right">0.737</td>
+<td align="right">0.830</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: sorghum</td>
+<td align="right">0.964</td>
+<td align="right">0.889</td>
+<td align="right">0.952</td>
+</tr>
+<tr class="even">
+<td align="left">Class: sweet_potato</td>
+<td align="right">0.988</td>
+<td align="right">1.000</td>
+<td align="right">0.954</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: trees</td>
+<td align="right">0.940</td>
+<td align="right">0.865</td>
+<td align="right">0.854</td>
+</tr>
+<tr class="even">
+<td align="left">Class: waterbody</td>
+<td align="right">0.964</td>
+<td align="right">1.000</td>
+<td align="right">0.982</td>
+</tr>
+</tbody>
+</table>
 <p>It is clear that fusion improved the accuracy of Sentinel 2 classification but UAV still retained the highest accuracy. Do we probably need a better framework to reap the benefits fo fusion?</p>
 </div>
 <div id="references" class="section level2">
