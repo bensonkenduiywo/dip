@@ -466,6 +466,7 @@ for (i in 1:length(folders)) {
 <pre class="r"><code>if(!file.exists(mosaicname)){
   v &lt;- mosaic(v1, v2, v3, v4, v5, fun=&quot;median&quot;)
 }</code></pre>
+<pre><code>## Warning: [mosaic] rasters did not align and were resampled</code></pre>
 <p>Save the mosaic to disk.</p>
 <pre class="r"><code>mosaicname &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
 if(!file.exists(mosaicname)){
@@ -1420,13 +1421,16 @@ if(!file.exists(s2h_name)){
   names(UAV) &lt;- c(&quot;UAV.b&quot;, &quot;UAV.g&quot;, &quot;UAV.r&quot;, &quot;UAV.nir&quot;)
   startTime &lt;- Sys.time() 
   cat(&quot;Start time&quot;, format(startTime),&quot;\n&quot;)
-    s2h.b &lt;- predict(UAV, randomForest(S2.b~UAV.b, data=data), na.rm=T)
-    s2h.g &lt;- predict(UAV, randomForest(S2.g~UAV.g, data=data), na.rm=T)
-    s2h.r &lt;- predict(UAV, randomForest(S2.r~UAV.r, data=data), na.rm=T)
-    s2h.nir &lt;- predict(UAV, randomForest(S2.nir~UAV.nir, data=data), na.rm=T)
+    s2h.b &lt;- predict(UAV, randomForest(S2.b~UAV.b, data=data, ntree = 300), na.rm=T)
+    s2h.g &lt;- predict(UAV, randomForest(S2.g~UAV.g, data=data, ntree = 300), na.rm=T)
+    s2h.r &lt;- predict(UAV, randomForest(S2.r~UAV.r, data=data, ntree = 300), na.rm=T)
+    s2h.nir &lt;- predict(UAV, randomForest(S2.nir~UAV.nir, data=data, ntree = 300), na.rm=T)
   timeDiff &lt;- Sys.time() - startTime
   cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)
 }</code></pre>
+<pre><code>## Start time 2021-06-01 10:07:24 
+## 
+##  Processing time 10.68047 mins</code></pre>
 <p>Stack all the S2 bands predictions.</p>
 <pre class="r"><code>if(!file.exists(s2h_name)){
   #Stack them
@@ -1447,8 +1451,8 @@ s2h.fused</code></pre>
 ## coord. ref. : +proj=utm +zone=36 +south +datum=WGS84 +units=m +no_defs 
 ## source      : memory 
 ## names       :          b,          g,          r,        nir 
-## min values  : 0.01523425, 0.02410997, 0.01786738, 0.04583284 
-## max values  :  0.6900882,  0.9910878,  1.1898665,  4.2925074</code></pre>
+## min values  : 0.01521104, 0.02353837, 0.01816200, 0.04858300 
+## max values  :  0.6900264,  0.9911296,  1.1898333,  4.2927575</code></pre>
 <p>Classify and validate the fused product using MLC.</p>
 <pre class="r"><code>trainData.f &lt;- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
 knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
@@ -1465,45 +1469,45 @@ knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">waterbody</td>
-<td align="left">0.0510754</td>
-<td align="left">0.0716181</td>
-<td align="left">0.0852791</td>
-<td align="left">0.0610438</td>
+<td align="left">0.0510816</td>
+<td align="left">0.0717809</td>
+<td align="left">0.0856187</td>
+<td align="left">0.0637863</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">0.0527513</td>
-<td align="left">0.0757862</td>
-<td align="left">0.0780251</td>
-<td align="left">0.0675453</td>
+<td align="left">0.0528547</td>
+<td align="left">0.0758793</td>
+<td align="left">0.0783905</td>
+<td align="left">0.0715046</td>
 </tr>
 <tr class="odd">
 <td align="left">waterbody</td>
-<td align="left">0.0527513</td>
-<td align="left">0.0757862</td>
-<td align="left">0.0780251</td>
-<td align="left">0.0675453</td>
+<td align="left">0.0528547</td>
+<td align="left">0.0758793</td>
+<td align="left">0.0783905</td>
+<td align="left">0.0715046</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">0.0525810</td>
-<td align="left">0.0656729</td>
-<td align="left">0.0807449</td>
-<td align="left">0.0695098</td>
+<td align="left">0.0526525</td>
+<td align="left">0.0657366</td>
+<td align="left">0.0807126</td>
+<td align="left">0.0732824</td>
 </tr>
 <tr class="odd">
 <td align="left">waterbody</td>
-<td align="left">0.0491394</td>
-<td align="left">0.0731673</td>
-<td align="left">0.0788112</td>
-<td align="left">0.0695036</td>
+<td align="left">0.0491812</td>
+<td align="left">0.0733447</td>
+<td align="left">0.0792717</td>
+<td align="left">0.0732762</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">0.0525810</td>
-<td align="left">0.0656729</td>
-<td align="left">0.0807449</td>
-<td align="left">0.0695098</td>
+<td align="left">0.0526525</td>
+<td align="left">0.0657366</td>
+<td align="left">0.0807126</td>
+<td align="left">0.0732824</td>
 </tr>
 </tbody>
 </table>
@@ -1539,25 +1543,25 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Accuracy</td>
 <td align="left">0.947</td>
 <td align="left">0.818</td>
-<td align="left">0.912</td>
+<td align="left">0.914</td>
 </tr>
 <tr class="even">
 <td align="left">Kappa</td>
 <td align="left">0.936</td>
 <td align="left">0.759</td>
-<td align="left">0.895</td>
+<td align="left">0.897</td>
 </tr>
 <tr class="odd">
 <td align="left">AccuracyLower</td>
 <td align="left">0.934</td>
 <td align="left">0.771</td>
-<td align="left">0.896</td>
+<td align="left">0.898</td>
 </tr>
 <tr class="even">
 <td align="left">AccuracyUpper</td>
 <td align="left">0.958</td>
 <td align="left">0.858</td>
-<td align="left">0.926</td>
+<td align="left">0.928</td>
 </tr>
 <tr class="odd">
 <td align="left">AccuracyNull</td>
@@ -1606,7 +1610,7 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Class: grass</td>
 <td align="left">0.789</td>
 <td align="left">0.390</td>
-<td align="left">0.771</td>
+<td align="left">0.776</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
@@ -1624,13 +1628,13 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Class: sweet_potato</td>
 <td align="left">0.990</td>
 <td align="left">0.933</td>
-<td align="left">0.964</td>
+<td align="left">0.966</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
 <td align="left">0.960</td>
 <td align="left">0.924</td>
-<td align="left">0.910</td>
+<td align="left">0.913</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
@@ -1667,7 +1671,7 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Class: grass</td>
 <td align="left">0.690</td>
 <td align="left">0.471</td>
-<td align="left">0.656</td>
+<td align="left">0.663</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
@@ -1685,7 +1689,7 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Class: sweet_potato</td>
 <td align="left">0.992</td>
 <td align="left">0.875</td>
-<td align="left">0.974</td>
+<td align="left">0.979</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
@@ -1752,7 +1756,7 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Class: trees</td>
 <td align="left">0.940</td>
 <td align="left">0.865</td>
-<td align="left">0.854</td>
+<td align="left">0.860</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>

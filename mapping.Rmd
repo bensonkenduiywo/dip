@@ -310,10 +310,10 @@ if(!file.exists(s2h_name)){
   names(UAV) <- c("UAV.b", "UAV.g", "UAV.r", "UAV.nir")
   startTime <- Sys.time() 
   cat("Start time", format(startTime),"\n")
-    s2h.b <- predict(UAV, randomForest(S2.b~UAV.b, data=data), na.rm=T)
-    s2h.g <- predict(UAV, randomForest(S2.g~UAV.g, data=data), na.rm=T)
-    s2h.r <- predict(UAV, randomForest(S2.r~UAV.r, data=data), na.rm=T)
-    s2h.nir <- predict(UAV, randomForest(S2.nir~UAV.nir, data=data), na.rm=T)
+    s2h.b <- predict(UAV, randomForest(S2.b~UAV.b, data=data, ntree = 300), na.rm=T)
+    s2h.g <- predict(UAV, randomForest(S2.g~UAV.g, data=data, ntree = 300), na.rm=T)
+    s2h.r <- predict(UAV, randomForest(S2.r~UAV.r, data=data, ntree = 300), na.rm=T)
+    s2h.nir <- predict(UAV, randomForest(S2.nir~UAV.nir, data=data, ntree = 300), na.rm=T)
   timeDiff <- Sys.time() - startTime
   cat("\n Processing time", format(timeDiff), "\n")
 }
