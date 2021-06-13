@@ -7,6 +7,8 @@ output:
     toc_collapsed: true
     toc_depth: 3
     number_sections: false
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -30,7 +32,7 @@ Load libraries, declare variables and data paths.
 rm(list=ls(all=TRUE))    #Clears R memory
 unlink(".RData") 
 if (!require("pacman")) install.packages("pacman"); library(pacman)
-p_load(raster, terra, randomForest,RStoolbox)
+p_load(raster, terra, randomForest, RStoolbox, tictoc)
 
 options(warn=1)
 cat("Set variables and start processing\n")
@@ -137,7 +139,7 @@ Load train data.
 ```{r v1,message=FALSE}
 #ref <- vect(paste0(Root,'Vector/Training_Sites_Mpolonjeni.shp'), "polygons")
 ref  <- shapefile(paste0(Root,'Vector/Training_Sites_Mpolonjeni.shp'))
-
+ref <- spTransform(ref, crs(v))
 ```
 
 Sample points from the polygons (stratified random sampling).
@@ -147,18 +149,17 @@ set.seed(530)
 samp <- spsample(ref, 4000, type='stratified')
 # add the land cover class to the points
 samp$class <- over(samp, ref)$Name
-table(samp$class)
-sort(unique(samp$class))
+samp$code <- over(samp, ref)$code
+knitr::kable(table(samp$class), align = 'l')
 sum(table(samp$class))
 ```
 
-Transform  samples to coordinates of the image.
+Declare the class names and their number.
 
 ```{r v3}
-samp <- spTransform(samp, crs(s))
+#samp <- spTransform(samp, crs(v))
 nClasses <- 8
-Classes <- data.frame(classID=c(1:8),class=c('Built_up','Cassava', 'Grass', 
-'Maize',  'Sorghum', 'Sweet_potato','Trees','Water'))
+Classes <- data.frame(classID=c(1:8),class=c('Built_up','Cassava', 'Grass',  'Maize',  'Sorghum', 'Sweet_potato','Trees','Water'))
 ```
 
 Display S2 image and the training points.
@@ -185,9 +186,10 @@ pch=c(0,15), col="blue", horiz=T, bty='n', cex=1.1)
 Extract UAV and S2 pixels values overlaid by points and split them into training and validation points.
 
 ```{r v5, message=FALSE}
-trainData.v <- extract(brick(v), samp, cellnumbers=F, df=T, sp=T) 
+#library(spatialEco) 
+trainData.v <- extract(brick(v), samp, cellnumbers=F, df=T, sp=T)
 knitr::kable(head(trainData.v))
-trainData.s <- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
+trainData.s <- extract(brick(s), samp, cellnumbers=F, df=T, sp=T)
 knitr::kable(head(trainData.s))
 library(caTools)
 #(NB: 0.4 means 40% for training and 60% for validation)
@@ -212,9 +214,9 @@ Classify UAV and S2 image using MLC algorithm.
 
 ```{r mlc1, message=FALSE}
 #UAV classification
-mlc.uav <- superClass(brick(v), train.v, responseCol = "class",
+mlc.uav <- superClass(brick(v), train.v[-2], responseCol = "class",
                 model = "mlc", minDist = 1)
-val.uav <- validateMap(mlc.uav$map, valid.v, responseCol="class", mode='classification', 
+val.uav <- validateMap(mlc.uav$map, valid.v[-2], responseCol="class", mode='classification', 
 classMapping = mlc.uav$classMapping)
 #Sentinel 2 classification
 mlc.s <- superClass(brick(s), train.s, responseCol = "class",
@@ -227,21 +229,17 @@ Make a function to display classified images and use it to display the MLC map.
 
 ```{r disp}
 display <- function(map, method, nClasses){
-	x11()
-	par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
-	image(map, col=c("magenta", "darkgreen", "seagreen1" , "yellow", "darkseagreen", "green1",
-	"cyan","blue"), axes=T, ann=F)
-	classes.Palette <- colorRampPalette(c("magenta", "darkgreen", "seagreen1" , "yellow", "darkseagreen", "green1",
-	"cyan","blue", "white")) 
-	add_legend("bottom", legend=c('Built_up','Cassava', 'Grass', 
+    x11()
+    par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
+    image(map, col=c("red", "orange", "cyan" , "yellow", "brown", "magenta", "green1","blue"), axes=T, ann=F)
+    classes.Palette <- colorRampPalette(c("red", "orange", "cyan" , "yellow", "brown", "magenta", "green1","blue", "white")) 
+    add_legend("bottom", legend=c('Built_up','Cassava', 'Grass', 
 'Maize',  'Sorghum', 'Sweet_potato','Trees','Water', "No data"), fill=classes.Palette(nClasses+1), ncol=3, bty='n', cex=1.1,  pt.bg = NA)
-	title(paste0(method," Classification"))
+    title(paste0(method," Classification"))
 }
-mlc.disp.v <- display(mlc.uav$map, "UAV MLC", nClasses)
-mlc.disp.s <- display(mlc.s$map, "S2 MLC", nClasses)
+display(mlc.uav$map, "UAV MLC", nClasses)
+display(mlc.s$map, "S2 MLC", nClasses)
 
-mlc.disp.v
-mlc.disp.s
 ```
 
 Lets design a function for accuracy assessment.
@@ -279,7 +277,7 @@ knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),
 
 ```
 
-Generally UAV gives better accuracy in most classes except for cassava and water where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let's consider a Zhou's fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.
+Generally UAV gives better accuracy in most classes except for cassava and maize where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let's consider a mean fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.
 
 Downsample S2 to UAV 1 m spatial resolution using bilinear. 
 
@@ -336,6 +334,7 @@ if(!file.exists(s2h_name)){
 Fuse the simulated S2 high resolution image with UAV using median.
 
 ```{r f5}
+s2h.fused <- v
 s2h.fused <- mean(s2h, v)
 s2h.fused
 
@@ -344,23 +343,20 @@ s2h.fused
 Classify and validate the fused product using MLC.
 
 ```{r f6}
-trainData.f <- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
+trainData.f <- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T)
 knitr::kable(head(trainData.f), align = 'l')
 valid.f <- subset(trainData.f, split == FALSE) 
 train.f <- subset(trainData.f, split == TRUE) 
 
 mlc.f <- superClass(brick(s2h.fused), train.f, responseCol = "class",
                 model = "mlc", minDist = 1)
-val.f <- validateMap(mlc.f$map, valid.f, responseCol="class", mode='classification', 
-classMapping = mlc.f$classMapping)
+val.f <- validateMap(mlc.f$map, valid.f, responseCol="class", mode='classification',  classMapping = mlc.f$classMapping)
 
-mlc.disp.f <- display(mlc.f$map, "S2 MLC", nClasses)
-
-mlc.disp.f
+display(mlc.f$map, "Fused MLC", nClasses)
 
 ```
 
-Validate the fused land-cover product.
+Validate the fused MLC land-cover product.
 
 ```{r f7}
 List.f <- accuracy(val.f)
@@ -373,13 +369,90 @@ knitr::kable(data.frame(UAV_UserAcc=round(List.v$byClass[,'Precision'],3),S2_Use
 
 knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),S2_ProducerAcc=round(List.s$byClass[,'Sensitivity'],3), Fused_ProducerAcc=round(List.f$byClass[,'Sensitivity'],3)), align = 'l')
 
+```
+
+It is clear that fusion improved mapping accuracy of some crops and was definitely better than S2 classification. Do we probably need a better framework to reap the benefits fo fusion? 
+Lets try another classification method.
+
+## Random Forest (RF)
+
+Use RF to classify the images (UAV, S2 and fused image) and compare crop class accuracy. Firts make plots training errot and variable importance. Note: the most important variable is one which has the highest increase in Mean Standard Error (MSE) when remove from the model. 
+
+```{r rf1, warning=FALSE}
+rf.f <- randomForest(code~., data=na.omit(as.data.frame(train.f[,-1]@data)), ntree = 200, importance=T)
+plot(rf.f, main='RF Training Error')
+varImpPlot(rf.f,sort=TRUE, n.var=min(dim(s2h.fused)[3], nrow(rf.f$importance)), main='RF Variable importance')
+knitr::kable(importance(rf.f))
 
 ```
 
-It is clear that fusion improved the accuracy of Sentinel 2 classification but UAV still retained the highest accuracy. Do we probably need a better framework to reap the benefits fo fusion? 
+Estimate crop probabilities and map using RF. We will later use the probabilities in a conditional/markov random fields (CRFs/MRFs) classification framework which considers spatial context.
+
+```{r rf2}
+tic("RF mapping duration:")
+rf.f.map <- superClass(brick(s2h.fused), train.f, responseCol = "class",
+                model = "rf")
+toc()
+tic("RF probabilities duration:")
+rf.f.prob <- superClass(brick(s2h.fused), train.f, responseCol = "class",
+                model = "rf", predType="prob")
+toc()
+#Display RF map.
+display(rf.f.map$map, "Fused RF", nClasses)
+
+```
+
+
+Validate RF fused map using F1-score and compare it with MLC fusion.
+
+```{r}
+val.rf.f <- validateMap(rf.f.map$map, valid.f, responseCol="code", mode='classification')
+
+List.rf.f <- accuracy(val.rf.f)
+knitr::kable(data.frame(RFfused=round(List.rf.f$byClass[,'F1'],3),
+            MLCfused=round(List.f$byClass[,'F1'],3)), align='l', caption = 'F1-score')
+
+```
+
+RF gives a better accuracy on the fused product compared to MLC.
+
+## MRF
+
+Markov Random Fields (MRFs) and Conditional Random Fields (CRFs) techniques are one of the commonly used contextual classification methods. They offer a probabilistic framework that models spatial dependencies of labels (MRFs) with additional dependencies in data in the case of CRFs in a classified image (Kenduiywo 2016).
+
+```{r crf1}
+#Load CRF/MRF function
+source(paste0("D:/Code/Sleek/CRF_MRF.R"))
+WithRef		<- FALSE
+beta0		  <- 20
+Nneighb		<- 4
+bCRF		  <- FALSE #If TRUE MOdel runs CRF
+
+#Take care of NA mask
+image <- brick(s2h.fused)
+mrf_name <- paste0(Path_out,'Mpolonjeni_fused_MRF_map.tif')
+if(!file.exists(mrf_name)){
+  rf_MRF <- CRF_MRF(image, WithRef, beta0, Nneighb, rf.f.map$map, rf.f.prob$map, bCRF, nClasses)
+  writeRaster(rf_MRF, mrf_name)
+}else{
+  rf_MRF <- brick(mrf_name)
+}
+
+display(rf_MRF, "Fused RF-MRF", nClasses)
+
+val.mrf.f <- validateMap(rf_MRF, valid.f, responseCol="code", mode='classification')
+
+List.mrf.f <- accuracy(val.mrf.f)
+knitr::kable(data.frame(MRFfused=round(List.mrf.f$byClass[,'F1'],3),RFfused=round(List.rf.f$byClass[,'F1'],3),
+            MLCfused=round(List.f$byClass[,'F1'],3)), align='l', caption = 'F1-score')
+
+```
+
 
 ## References
 
 Breiman, L. Random Forests. *Machine Learning* 45, 5--32 (2001). https://doi.org/10.1023/A:1010933404324
 
 Y. Zou, G. Li and S. Wang, "The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance," *IEEE International Conference on Information and Automation (ICIA)*, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.
+
+Kenduiywo, B. *Spatial-temporal Dynamic Conditional Random Fields crop type mapping using radar images*. Technische Universitaet Darmstadt Prints (2016)

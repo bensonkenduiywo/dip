@@ -13,6 +13,7 @@
 
 <title>Crop mapping</title>
 
+<script src="site_libs/header-attrs-2.8/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
@@ -401,7 +402,7 @@ div.tocify {
 <pre class="r"><code>rm(list=ls(all=TRUE))    #Clears R memory
 unlink(&quot;.RData&quot;) 
 if (!require(&quot;pacman&quot;)) install.packages(&quot;pacman&quot;); library(pacman)
-p_load(raster, terra, randomForest,RStoolbox)
+p_load(raster, terra, randomForest, RStoolbox, tictoc)
 
 options(warn=1)
 cat(&quot;Set variables and start processing\n&quot;)</code></pre>
@@ -466,7 +467,6 @@ for (i in 1:length(folders)) {
 <pre class="r"><code>if(!file.exists(mosaicname)){
   v &lt;- mosaic(v1, v2, v3, v4, v5, fun=&quot;median&quot;)
 }</code></pre>
-<pre><code>## Warning: [mosaic] rasters did not align and were resampled</code></pre>
 <p>Save the mosaic to disk.</p>
 <pre class="r"><code>mosaicname &lt;- paste0(Path_out,&#39;Mpolonjeni_W1_Mosaic.tif&#39;)
 if(!file.exists(mosaicname)){
@@ -487,29 +487,64 @@ box()</code></pre>
 <h2>Training data sampling</h2>
 <p>Load train data.</p>
 <pre class="r"><code>#ref &lt;- vect(paste0(Root,&#39;Vector/Training_Sites_Mpolonjeni.shp&#39;), &quot;polygons&quot;)
-ref  &lt;- shapefile(paste0(Root,&#39;Vector/Training_Sites_Mpolonjeni.shp&#39;))</code></pre>
+ref  &lt;- shapefile(paste0(Root,&#39;Vector/Training_Sites_Mpolonjeni.shp&#39;))
+ref &lt;- spTransform(ref, crs(v))</code></pre>
 <p>Sample points from the polygons (stratified random sampling).</p>
 <pre class="r"><code>set.seed(530)
 samp &lt;- spsample(ref, 4000, type=&#39;stratified&#39;)</code></pre>
 <pre><code>## Warning in proj4string(obj): CRS object has comment, which is lost in output</code></pre>
 <pre class="r"><code># add the land cover class to the points
 samp$class &lt;- over(samp, ref)$Name
-table(samp$class)</code></pre>
-<pre><code>## 
-##     built_up      cassava        grass        maize      sorghum sweet_potato 
-##          736          107          144          715          229          729 
-##        trees    waterbody 
-##          967          353</code></pre>
-<pre class="r"><code>sort(unique(samp$class))</code></pre>
-<pre><code>## [1] &quot;built_up&quot;     &quot;cassava&quot;      &quot;grass&quot;        &quot;maize&quot;        &quot;sorghum&quot;     
-## [6] &quot;sweet_potato&quot; &quot;trees&quot;        &quot;waterbody&quot;</code></pre>
+samp$code &lt;- over(samp, ref)$code
+knitr::kable(table(samp$class), align = &#39;l&#39;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="left">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">built_up</td>
+<td align="left">734</td>
+</tr>
+<tr class="even">
+<td align="left">cassava</td>
+<td align="left">109</td>
+</tr>
+<tr class="odd">
+<td align="left">grass</td>
+<td align="left">132</td>
+</tr>
+<tr class="even">
+<td align="left">maize</td>
+<td align="left">749</td>
+</tr>
+<tr class="odd">
+<td align="left">sorghum</td>
+<td align="left">235</td>
+</tr>
+<tr class="even">
+<td align="left">sweet_potato</td>
+<td align="left">738</td>
+</tr>
+<tr class="odd">
+<td align="left">trees</td>
+<td align="left">918</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="left">368</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>sum(table(samp$class))</code></pre>
-<pre><code>## [1] 3980</code></pre>
-<p>Transform samples to coordinates of the image.</p>
-<pre class="r"><code>samp &lt;- spTransform(samp, crs(s))
+<pre><code>## [1] 3983</code></pre>
+<p>Declare the class names and their number.</p>
+<pre class="r"><code>#samp &lt;- spTransform(samp, crs(v))
 nClasses &lt;- 8
-Classes &lt;- data.frame(classID=c(1:8),class=c(&#39;Built_up&#39;,&#39;Cassava&#39;, &#39;Grass&#39;, 
-&#39;Maize&#39;,  &#39;Sorghum&#39;, &#39;Sweet_potato&#39;,&#39;Trees&#39;,&#39;Water&#39;))</code></pre>
+Classes &lt;- data.frame(classID=c(1:8),class=c(&#39;Built_up&#39;,&#39;Cassava&#39;, &#39;Grass&#39;,  &#39;Maize&#39;,  &#39;Sorghum&#39;, &#39;Sweet_potato&#39;,&#39;Trees&#39;,&#39;Water&#39;))</code></pre>
 <p>Display S2 image and the training points.</p>
 <pre class="r"><code>add_legend &lt;- function(...) {
   opar &lt;- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
@@ -528,12 +563,14 @@ add_legend(&quot;bottom&quot;, legend=&quot;Reference data&quot;,
 pch=c(0,15), col=&quot;blue&quot;, horiz=T, bty=&#39;n&#39;, cex=1.1)</code></pre>
 <p><img src="mapping_files/figure-html/v4-1.png" width="672" /></p>
 <p>Extract UAV and S2 pixels values overlaid by points and split them into training and validation points.</p>
-<pre class="r"><code>trainData.v &lt;- extract(brick(v), samp, cellnumbers=F, df=T, sp=T) 
+<pre class="r"><code>#library(spatialEco) 
+trainData.v &lt;- extract(brick(v), samp, cellnumbers=F, df=T, sp=T)
 knitr::kable(head(trainData.v))</code></pre>
 <table>
 <thead>
 <tr class="header">
 <th align="left">class</th>
+<th align="right">code</th>
 <th align="right">b</th>
 <th align="right">g</th>
 <th align="right">r</th>
@@ -543,20 +580,7 @@ knitr::kable(head(trainData.v))</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">waterbody</td>
-<td align="right">0.0625616</td>
-<td align="right">0.0964470</td>
-<td align="right">0.0989978</td>
-<td align="right">0.0836505</td>
-</tr>
-<tr class="even">
-<td align="left">waterbody</td>
-<td align="right">0.0643933</td>
-<td align="right">0.0971735</td>
-<td align="right">0.1009569</td>
-<td align="right">0.0849024</td>
-</tr>
-<tr class="odd">
-<td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0643933</td>
 <td align="right">0.0971735</td>
 <td align="right">0.1009569</td>
@@ -564,6 +588,7 @@ knitr::kable(head(trainData.v))</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0642581</td>
 <td align="right">0.0969432</td>
 <td align="right">0.1003542</td>
@@ -571,6 +596,7 @@ knitr::kable(head(trainData.v))</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0645692</td>
 <td align="right">0.0981981</td>
 <td align="right">0.1022022</td>
@@ -578,6 +604,23 @@ knitr::kable(head(trainData.v))</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="right">8</td>
+<td align="right">0.0633345</td>
+<td align="right">0.0975087</td>
+<td align="right">0.0983355</td>
+<td align="right">0.0855006</td>
+</tr>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="right">8</td>
+<td align="right">0.0642581</td>
+<td align="right">0.0969432</td>
+<td align="right">0.1003542</td>
+<td align="right">0.0865044</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0642581</td>
 <td align="right">0.0969432</td>
 <td align="right">0.1003542</td>
@@ -585,12 +628,13 @@ knitr::kable(head(trainData.v))</code></pre>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>trainData.s &lt;- extract(brick(s), samp, cellnumbers=F, df=T, sp=T) 
+<pre class="r"><code>trainData.s &lt;- extract(brick(s), samp, cellnumbers=F, df=T, sp=T)
 knitr::kable(head(trainData.s))</code></pre>
 <table>
 <thead>
 <tr class="header">
 <th align="left">class</th>
+<th align="right">code</th>
 <th align="right">b</th>
 <th align="right">g</th>
 <th align="right">r</th>
@@ -600,6 +644,7 @@ knitr::kable(head(trainData.s))</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0228</td>
 <td align="right">0.0253</td>
 <td align="right">0.024</td>
@@ -607,6 +652,7 @@ knitr::kable(head(trainData.s))</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0228</td>
 <td align="right">0.0253</td>
 <td align="right">0.024</td>
@@ -614,6 +660,7 @@ knitr::kable(head(trainData.s))</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0228</td>
 <td align="right">0.0253</td>
 <td align="right">0.024</td>
@@ -621,6 +668,7 @@ knitr::kable(head(trainData.s))</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0228</td>
 <td align="right">0.0253</td>
 <td align="right">0.024</td>
@@ -628,6 +676,7 @@ knitr::kable(head(trainData.s))</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0228</td>
 <td align="right">0.0253</td>
 <td align="right">0.024</td>
@@ -635,6 +684,7 @@ knitr::kable(head(trainData.s))</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="right">8</td>
 <td align="right">0.0228</td>
 <td align="right">0.0253</td>
 <td align="right">0.024</td>
@@ -664,31 +714,31 @@ knitr::kable(table(train.v$class), align = &#39;l&#39;)</code></pre>
 </tr>
 <tr class="even">
 <td align="left">cassava</td>
-<td align="left">35</td>
+<td align="left">38</td>
 </tr>
 <tr class="odd">
 <td align="left">grass</td>
-<td align="left">46</td>
+<td align="left">43</td>
 </tr>
 <tr class="even">
 <td align="left">maize</td>
-<td align="left">240</td>
+<td align="left">246</td>
 </tr>
 <tr class="odd">
 <td align="left">sorghum</td>
-<td align="left">75</td>
+<td align="left">77</td>
 </tr>
 <tr class="even">
 <td align="left">sweet_potato</td>
-<td align="left">244</td>
+<td align="left">246</td>
 </tr>
 <tr class="odd">
 <td align="left">trees</td>
-<td align="left">321</td>
+<td align="left">307</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">118</td>
+<td align="left">122</td>
 </tr>
 </tbody>
 </table>
@@ -703,35 +753,35 @@ knitr::kable(table(train.v$class), align = &#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">built_up</td>
-<td align="left">488</td>
+<td align="left">486</td>
 </tr>
 <tr class="even">
 <td align="left">cassava</td>
-<td align="left">72</td>
+<td align="left">71</td>
 </tr>
 <tr class="odd">
 <td align="left">grass</td>
-<td align="left">98</td>
+<td align="left">89</td>
 </tr>
 <tr class="even">
 <td align="left">maize</td>
-<td align="left">475</td>
+<td align="left">503</td>
 </tr>
 <tr class="odd">
 <td align="left">sorghum</td>
-<td align="left">154</td>
+<td align="left">158</td>
 </tr>
 <tr class="even">
 <td align="left">sweet_potato</td>
-<td align="left">485</td>
+<td align="left">492</td>
 </tr>
 <tr class="odd">
 <td align="left">trees</td>
-<td align="left">646</td>
+<td align="left">611</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">235</td>
+<td align="left">246</td>
 </tr>
 </tbody>
 </table>
@@ -753,31 +803,31 @@ knitr::kable(table(train.s$class), align = &#39;l&#39;)</code></pre>
 </tr>
 <tr class="even">
 <td align="left">cassava</td>
-<td align="left">35</td>
+<td align="left">38</td>
 </tr>
 <tr class="odd">
 <td align="left">grass</td>
-<td align="left">46</td>
+<td align="left">43</td>
 </tr>
 <tr class="even">
 <td align="left">maize</td>
-<td align="left">240</td>
+<td align="left">246</td>
 </tr>
 <tr class="odd">
 <td align="left">sorghum</td>
-<td align="left">75</td>
+<td align="left">77</td>
 </tr>
 <tr class="even">
 <td align="left">sweet_potato</td>
-<td align="left">244</td>
+<td align="left">246</td>
 </tr>
 <tr class="odd">
 <td align="left">trees</td>
-<td align="left">321</td>
+<td align="left">307</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">118</td>
+<td align="left">122</td>
 </tr>
 </tbody>
 </table>
@@ -792,35 +842,35 @@ knitr::kable(table(train.s$class), align = &#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">built_up</td>
-<td align="left">488</td>
+<td align="left">486</td>
 </tr>
 <tr class="even">
 <td align="left">cassava</td>
-<td align="left">72</td>
+<td align="left">71</td>
 </tr>
 <tr class="odd">
 <td align="left">grass</td>
-<td align="left">98</td>
+<td align="left">89</td>
 </tr>
 <tr class="even">
 <td align="left">maize</td>
-<td align="left">475</td>
+<td align="left">503</td>
 </tr>
 <tr class="odd">
 <td align="left">sorghum</td>
-<td align="left">154</td>
+<td align="left">158</td>
 </tr>
 <tr class="even">
 <td align="left">sweet_potato</td>
-<td align="left">485</td>
+<td align="left">492</td>
 </tr>
 <tr class="odd">
 <td align="left">trees</td>
-<td align="left">646</td>
+<td align="left">611</td>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
-<td align="left">235</td>
+<td align="left">246</td>
 </tr>
 </tbody>
 </table>
@@ -829,9 +879,9 @@ knitr::kable(table(train.s$class), align = &#39;l&#39;)</code></pre>
 <h2>Maximum Likelihood Classification</h2>
 <p>Classify UAV and S2 image using MLC algorithm.</p>
 <pre class="r"><code>#UAV classification
-mlc.uav &lt;- superClass(brick(v), train.v, responseCol = &quot;class&quot;,
+mlc.uav &lt;- superClass(brick(v), train.v[-2], responseCol = &quot;class&quot;,
                 model = &quot;mlc&quot;, minDist = 1)
-val.uav &lt;- validateMap(mlc.uav$map, valid.v, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
+val.uav &lt;- validateMap(mlc.uav$map, valid.v[-2], responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
 classMapping = mlc.uav$classMapping)
 #Sentinel 2 classification
 mlc.s &lt;- superClass(brick(s), train.s, responseCol = &quot;class&quot;,
@@ -842,22 +892,14 @@ classMapping = mlc.s$classMapping)</code></pre>
 <pre class="r"><code>display &lt;- function(map, method, nClasses){
     x11()
     par(mar = c(7, 2, 1.6, 6)) #c(bottom, left, top, right)
-    image(map, col=c(&quot;magenta&quot;, &quot;darkgreen&quot;, &quot;seagreen1&quot; , &quot;yellow&quot;, &quot;darkseagreen&quot;, &quot;green1&quot;,
-    &quot;cyan&quot;,&quot;blue&quot;), axes=T, ann=F)
-    classes.Palette &lt;- colorRampPalette(c(&quot;magenta&quot;, &quot;darkgreen&quot;, &quot;seagreen1&quot; , &quot;yellow&quot;, &quot;darkseagreen&quot;, &quot;green1&quot;,
-    &quot;cyan&quot;,&quot;blue&quot;, &quot;white&quot;)) 
+    image(map, col=c(&quot;red&quot;, &quot;orange&quot;, &quot;cyan&quot; , &quot;yellow&quot;, &quot;brown&quot;, &quot;magenta&quot;, &quot;green1&quot;,&quot;blue&quot;), axes=T, ann=F)
+    classes.Palette &lt;- colorRampPalette(c(&quot;red&quot;, &quot;orange&quot;, &quot;cyan&quot; , &quot;yellow&quot;, &quot;brown&quot;, &quot;magenta&quot;, &quot;green1&quot;,&quot;blue&quot;, &quot;white&quot;)) 
     add_legend(&quot;bottom&quot;, legend=c(&#39;Built_up&#39;,&#39;Cassava&#39;, &#39;Grass&#39;, 
 &#39;Maize&#39;,  &#39;Sorghum&#39;, &#39;Sweet_potato&#39;,&#39;Trees&#39;,&#39;Water&#39;, &quot;No data&quot;), fill=classes.Palette(nClasses+1), ncol=3, bty=&#39;n&#39;, cex=1.1,  pt.bg = NA)
     title(paste0(method,&quot; Classification&quot;))
 }
-mlc.disp.v &lt;- display(mlc.uav$map, &quot;UAV MLC&quot;, nClasses)
-mlc.disp.s &lt;- display(mlc.s$map, &quot;S2 MLC&quot;, nClasses)
-
-mlc.disp.v</code></pre>
-<p><img src="mapping_files/figure-html/disp-1.png" width="672" /></p>
-<pre><code>## NULL</code></pre>
-<pre class="r"><code>mlc.disp.s</code></pre>
-<pre><code>## NULL</code></pre>
+display(mlc.uav$map, &quot;UAV MLC&quot;, nClasses)
+display(mlc.s$map, &quot;S2 MLC&quot;, nClasses)</code></pre>
 <p>Lets design a function for accuracy assessment.</p>
 <pre class="r"><code>accuracy &lt;- function(val.test){
     assessment.storage &lt;- val.test$performance 
@@ -889,7 +931,7 @@ knitr::kable(List.v$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">built_up</td>
-<td align="left">274</td>
+<td align="left">268</td>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">0</td>
@@ -901,7 +943,7 @@ knitr::kable(List.v$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tr class="even">
 <td align="left">cassava</td>
 <td align="left">0</td>
-<td align="left">41</td>
+<td align="left">39</td>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">0</td>
@@ -911,24 +953,24 @@ knitr::kable(List.v$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">grass</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">56</td>
+<td align="left">22</td>
 <td align="left">0</td>
 <td align="left">0</td>
-<td align="left">58</td>
-<td align="left">20</td>
-<td align="left">0</td>
-<td align="left">0</td>
-<td align="left">6</td>
+<td align="left">5</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
 <td align="left">maize</td>
-<td align="left">10</td>
+<td align="left">13</td>
 <td align="left">0</td>
 <td align="left">2</td>
-<td align="left">213</td>
-<td align="left">3</td>
+<td align="left">233</td>
+<td align="left">6</td>
 <td align="left">0</td>
-<td align="left">11</td>
+<td align="left">6</td>
 <td align="left">4</td>
 </tr>
 <tr class="odd">
@@ -936,32 +978,32 @@ knitr::kable(List.v$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">0</td>
-<td align="left">8</td>
-<td align="left">80</td>
+<td align="left">5</td>
+<td align="left">70</td>
 <td align="left">0</td>
-<td align="left">2</td>
+<td align="left">3</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
 <td align="left">sweet_potato</td>
 <td align="left">0</td>
-<td align="left">1</td>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">0</td>
-<td align="left">237</td>
-<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">239</td>
+<td align="left">0</td>
 <td align="left">0</td>
 </tr>
 <tr class="odd">
 <td align="left">trees</td>
 <td align="left">0</td>
 <td align="left">0</td>
+<td align="left">2</td>
 <td align="left">3</td>
-<td align="left">0</td>
-<td align="left">0</td>
-<td align="left">3</td>
-<td align="left">328</td>
+<td align="left">1</td>
+<td align="left">2</td>
+<td align="left">352</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
@@ -973,7 +1015,7 @@ knitr::kable(List.v$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">0</td>
-<td align="left">107</td>
+<td align="left">109</td>
 </tr>
 </tbody>
 </table>
@@ -998,10 +1040,10 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">built_up</td>
-<td align="left">70</td>
+<td align="left">67</td>
 <td align="left">0</td>
-<td align="left">0</td>
-<td align="left">1</td>
+<td align="left">2</td>
+<td align="left">2</td>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">2</td>
@@ -1010,7 +1052,7 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tr class="even">
 <td align="left">cassava</td>
 <td align="left">0</td>
-<td align="left">9</td>
+<td align="left">8</td>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">0</td>
@@ -1020,35 +1062,35 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">grass</td>
+<td align="left">3</td>
+<td align="left">0</td>
+<td align="left">12</td>
+<td align="left">5</td>
+<td align="left">0</td>
+<td align="left">0</td>
 <td align="left">4</td>
-<td align="left">0</td>
-<td align="left">8</td>
-<td align="left">4</td>
-<td align="left">0</td>
-<td align="left">0</td>
-<td align="left">1</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
 <td align="left">maize</td>
+<td align="left">4</td>
+<td align="left">0</td>
+<td align="left">8</td>
+<td align="left">29</td>
+<td align="left">2</td>
+<td align="left">0</td>
 <td align="left">7</td>
-<td align="left">0</td>
-<td align="left">15</td>
-<td align="left">28</td>
-<td align="left">1</td>
-<td align="left">0</td>
-<td align="left">9</td>
 <td align="left">0</td>
 </tr>
 <tr class="odd">
 <td align="left">sorghum</td>
-<td align="left">2</td>
+<td align="left">3</td>
 <td align="left">0</td>
 <td align="left">1</td>
 <td align="left">4</td>
-<td align="left">8</td>
+<td align="left">6</td>
 <td align="left">0</td>
-<td align="left">4</td>
+<td align="left">5</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
@@ -1059,7 +1101,7 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">14</td>
-<td align="left">2</td>
+<td align="left">3</td>
 <td align="left">0</td>
 </tr>
 <tr class="odd">
@@ -1068,9 +1110,9 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <td align="left">0</td>
 <td align="left">0</td>
 <td align="left">1</td>
+<td align="left">1</td>
 <td align="left">0</td>
-<td align="left">0</td>
-<td align="left">115</td>
+<td align="left">112</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
@@ -1116,12 +1158,12 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tr class="even">
 <td align="left">AccuracyUpper</td>
 <td align="left">0.958</td>
-<td align="left">0.858</td>
+<td align="left">0.859</td>
 </tr>
 <tr class="odd">
 <td align="left">AccuracyNull</td>
-<td align="left">0.247</td>
-<td align="left">0.418</td>
+<td align="left">0.255</td>
+<td align="left">0.425</td>
 </tr>
 <tr class="even">
 <td align="left">AccuracyPValue</td>
@@ -1147,38 +1189,38 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">Class: built_up</td>
-<td align="left">0.980</td>
-<td align="left">0.897</td>
+<td align="left">0.973</td>
+<td align="left">0.893</td>
 </tr>
 <tr class="even">
 <td align="left">Class: cassava</td>
-<td align="left">0.988</td>
+<td align="left">1.000</td>
 <td align="left">1.000</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: grass</td>
-<td align="left">0.789</td>
-<td align="left">0.390</td>
+<td align="left">0.778</td>
+<td align="left">0.511</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
-<td align="left">0.880</td>
-<td align="left">0.571</td>
+<td align="left">0.884</td>
+<td align="left">0.637</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: sorghum</td>
-<td align="left">0.925</td>
-<td align="left">0.571</td>
+<td align="left">0.903</td>
+<td align="left">0.429</td>
 </tr>
 <tr class="even">
 <td align="left">Class: sweet_potato</td>
-<td align="left">0.990</td>
-<td align="left">0.933</td>
+<td align="left">0.996</td>
+<td align="left">0.903</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
-<td align="left">0.960</td>
-<td align="left">0.924</td>
+<td align="left">0.968</td>
+<td align="left">0.907</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
@@ -1200,7 +1242,7 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tr class="odd">
 <td align="left">Class: built_up</td>
 <td align="left">0.996</td>
-<td align="left">0.959</td>
+<td align="left">0.918</td>
 </tr>
 <tr class="even">
 <td align="left">Class: cassava</td>
@@ -1209,28 +1251,28 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">Class: grass</td>
-<td align="left">0.690</td>
-<td align="left">0.471</td>
+<td align="left">0.667</td>
+<td align="left">0.500</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
-<td align="left">0.877</td>
-<td align="left">0.467</td>
+<td align="left">0.883</td>
+<td align="left">0.580</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: sorghum</td>
-<td align="left">0.889</td>
-<td align="left">0.421</td>
+<td align="left">0.897</td>
+<td align="left">0.316</td>
 </tr>
 <tr class="even">
 <td align="left">Class: sweet_potato</td>
-<td align="left">0.992</td>
-<td align="left">0.875</td>
+<td align="left">1.000</td>
+<td align="left">0.824</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
+<td align="left">0.978</td>
 <td align="left">0.982</td>
-<td align="left">0.991</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
@@ -1251,47 +1293,47 @@ knitr::kable(List.s$ConfusionMatrix,align=&#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">Class: built_up</td>
-<td align="left">0.965</td>
-<td align="left">0.843</td>
+<td align="left">0.950</td>
+<td align="left">0.870</td>
 </tr>
 <tr class="even">
 <td align="left">Class: cassava</td>
-<td align="left">0.976</td>
+<td align="left">1.000</td>
 <td align="left">1.000</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: grass</td>
-<td align="left">0.921</td>
-<td align="left">0.333</td>
+<td align="left">0.933</td>
+<td align="left">0.522</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
-<td align="left">0.884</td>
-<td align="left">0.737</td>
+<td align="left">0.886</td>
+<td align="left">0.707</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: sorghum</td>
-<td align="left">0.964</td>
-<td align="left">0.889</td>
+<td align="left">0.909</td>
+<td align="left">0.667</td>
 </tr>
 <tr class="even">
 <td align="left">Class: sweet_potato</td>
-<td align="left">0.988</td>
+<td align="left">0.992</td>
 <td align="left">1.000</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
-<td align="left">0.940</td>
-<td align="left">0.865</td>
+<td align="left">0.959</td>
+<td align="left">0.842</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
-<td align="left">0.964</td>
+<td align="left">0.965</td>
 <td align="left">1.000</td>
 </tr>
 </tbody>
 </table>
-<p>Generally UAV gives better accuracy in most classes except for cassava and water where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let’s consider a Zhou’s fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.</p>
+<p>Generally UAV gives better accuracy in most classes except for cassava and maize where Sentinel 2 performs well as observed from F1-score. However, the big question is will fusion improve accuracy? Let’s consider a mean fusion approach using random forest predicted/simulated high Sentinel based donwsampled Sentinel 2 data and UAV.</p>
 <p>Downsample S2 to UAV 1 m spatial resolution using bilinear.</p>
 <pre class="r"><code>s_r &lt;- resample(s,v,method=&quot;bilinear&quot;)</code></pre>
 <p>Now sample points from UAV MLC land-cover RF regression prediction.</p>
@@ -1428,9 +1470,6 @@ if(!file.exists(s2h_name)){
   timeDiff &lt;- Sys.time() - startTime
   cat(&quot;\n Processing time&quot;, format(timeDiff), &quot;\n&quot;)
 }</code></pre>
-<pre><code>## Start time 2021-06-01 10:07:24 
-## 
-##  Processing time 10.68047 mins</code></pre>
 <p>Stack all the S2 bands predictions.</p>
 <pre class="r"><code>if(!file.exists(s2h_name)){
   #Stack them
@@ -1442,7 +1481,8 @@ if(!file.exists(s2h_name)){
   s2h &lt;- rast(s2h_name)
 }</code></pre>
 <p>Fuse the simulated S2 high resolution image with UAV using median.</p>
-<pre class="r"><code>s2h.fused &lt;- mean(s2h, v)
+<pre class="r"><code>s2h.fused &lt;- v
+s2h.fused &lt;- mean(s2h, v)
 s2h.fused</code></pre>
 <pre><code>## class       : SpatRaster 
 ## dimensions  : 3228, 2572, 4  (nrow, ncol, nlyr)
@@ -1452,14 +1492,15 @@ s2h.fused</code></pre>
 ## source      : memory 
 ## names       :          b,          g,          r,        nir 
 ## min values  : 0.01521104, 0.02353837, 0.01816200, 0.04858300 
-## max values  :  0.6900264,  0.9911296,  1.1898333,  4.2927575</code></pre>
+## max values  :  0.6900264,  0.9911296,  1.1898333,  4.2927577</code></pre>
 <p>Classify and validate the fused product using MLC.</p>
-<pre class="r"><code>trainData.f &lt;- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T) 
+<pre class="r"><code>trainData.f &lt;- extract(brick(s2h.fused), samp, cellnumbers=F, df=T, sp=T)
 knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
 <table>
 <thead>
 <tr class="header">
 <th align="left">class</th>
+<th align="left">code</th>
 <th align="left">b</th>
 <th align="left">g</th>
 <th align="left">r</th>
@@ -1469,20 +1510,7 @@ knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">waterbody</td>
-<td align="left">0.0510816</td>
-<td align="left">0.0717809</td>
-<td align="left">0.0856187</td>
-<td align="left">0.0637863</td>
-</tr>
-<tr class="even">
-<td align="left">waterbody</td>
-<td align="left">0.0528547</td>
-<td align="left">0.0758793</td>
-<td align="left">0.0783905</td>
-<td align="left">0.0715046</td>
-</tr>
-<tr class="odd">
-<td align="left">waterbody</td>
+<td align="left">8</td>
 <td align="left">0.0528547</td>
 <td align="left">0.0758793</td>
 <td align="left">0.0783905</td>
@@ -1490,6 +1518,7 @@ knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="left">8</td>
 <td align="left">0.0526525</td>
 <td align="left">0.0657366</td>
 <td align="left">0.0807126</td>
@@ -1497,6 +1526,7 @@ knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
 </tr>
 <tr class="odd">
 <td align="left">waterbody</td>
+<td align="left">8</td>
 <td align="left">0.0491812</td>
 <td align="left">0.0733447</td>
 <td align="left">0.0792717</td>
@@ -1504,6 +1534,23 @@ knitr::kable(head(trainData.f), align = &#39;l&#39;)</code></pre>
 </tr>
 <tr class="even">
 <td align="left">waterbody</td>
+<td align="left">8</td>
+<td align="left">0.0498265</td>
+<td align="left">0.0749694</td>
+<td align="left">0.0791994</td>
+<td align="left">0.0718037</td>
+</tr>
+<tr class="odd">
+<td align="left">waterbody</td>
+<td align="left">8</td>
+<td align="left">0.0526525</td>
+<td align="left">0.0657366</td>
+<td align="left">0.0807126</td>
+<td align="left">0.0732824</td>
+</tr>
+<tr class="even">
+<td align="left">waterbody</td>
+<td align="left">8</td>
 <td align="left">0.0526525</td>
 <td align="left">0.0657366</td>
 <td align="left">0.0807126</td>
@@ -1516,15 +1563,10 @@ train.f &lt;- subset(trainData.f, split == TRUE)
 
 mlc.f &lt;- superClass(brick(s2h.fused), train.f, responseCol = &quot;class&quot;,
                 model = &quot;mlc&quot;, minDist = 1)
-val.f &lt;- validateMap(mlc.f$map, valid.f, responseCol=&quot;class&quot;, mode=&#39;classification&#39;, 
-classMapping = mlc.f$classMapping)
+val.f &lt;- validateMap(mlc.f$map, valid.f, responseCol=&quot;class&quot;, mode=&#39;classification&#39;,  classMapping = mlc.f$classMapping)
 
-mlc.disp.f &lt;- display(mlc.f$map, &quot;S2 MLC&quot;, nClasses)
-
-mlc.disp.f</code></pre>
-<p><img src="mapping_files/figure-html/f6-1.png" width="672" /></p>
-<pre><code>## NULL</code></pre>
-<p>Validate the fused land-cover product.</p>
+display(mlc.f$map, &quot;Fused MLC&quot;, nClasses)</code></pre>
+<p>Validate the fused MLC land-cover product.</p>
 <pre class="r"><code>List.f &lt;- accuracy(val.f)
 print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <pre><code>## [1] &quot;Accuracy measures comparison&quot;</code></pre>
@@ -1543,31 +1585,31 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <td align="left">Accuracy</td>
 <td align="left">0.947</td>
 <td align="left">0.818</td>
-<td align="left">0.914</td>
+<td align="left">0.907</td>
 </tr>
 <tr class="even">
 <td align="left">Kappa</td>
 <td align="left">0.936</td>
 <td align="left">0.759</td>
-<td align="left">0.897</td>
+<td align="left">0.888</td>
 </tr>
 <tr class="odd">
 <td align="left">AccuracyLower</td>
 <td align="left">0.934</td>
 <td align="left">0.771</td>
-<td align="left">0.898</td>
+<td align="left">0.891</td>
 </tr>
 <tr class="even">
 <td align="left">AccuracyUpper</td>
 <td align="left">0.958</td>
-<td align="left">0.858</td>
-<td align="left">0.928</td>
+<td align="left">0.859</td>
+<td align="left">0.922</td>
 </tr>
 <tr class="odd">
 <td align="left">AccuracyNull</td>
-<td align="left">0.247</td>
-<td align="left">0.418</td>
-<td align="left">0.247</td>
+<td align="left">0.255</td>
+<td align="left">0.425</td>
+<td align="left">0.255</td>
 </tr>
 <tr class="even">
 <td align="left">AccuracyPValue</td>
@@ -1596,51 +1638,51 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">Class: built_up</td>
-<td align="left">0.980</td>
-<td align="left">0.897</td>
-<td align="left">0.979</td>
+<td align="left">0.973</td>
+<td align="left">0.893</td>
+<td align="left">0.976</td>
 </tr>
 <tr class="even">
 <td align="left">Class: cassava</td>
-<td align="left">0.988</td>
 <td align="left">1.000</td>
-<td align="left">0.909</td>
+<td align="left">1.000</td>
+<td align="left">0.925</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: grass</td>
-<td align="left">0.789</td>
-<td align="left">0.390</td>
-<td align="left">0.776</td>
+<td align="left">0.778</td>
+<td align="left">0.511</td>
+<td align="left">0.750</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
-<td align="left">0.880</td>
-<td align="left">0.571</td>
-<td align="left">0.840</td>
+<td align="left">0.884</td>
+<td align="left">0.637</td>
+<td align="left">0.810</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: sorghum</td>
-<td align="left">0.925</td>
-<td align="left">0.571</td>
-<td align="left">0.802</td>
+<td align="left">0.903</td>
+<td align="left">0.429</td>
+<td align="left">0.733</td>
 </tr>
 <tr class="even">
 <td align="left">Class: sweet_potato</td>
-<td align="left">0.990</td>
-<td align="left">0.933</td>
-<td align="left">0.966</td>
+<td align="left">0.996</td>
+<td align="left">0.903</td>
+<td align="left">0.975</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
-<td align="left">0.960</td>
-<td align="left">0.924</td>
-<td align="left">0.913</td>
+<td align="left">0.968</td>
+<td align="left">0.907</td>
+<td align="left">0.922</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
 <td align="left">0.982</td>
 <td align="left">1.000</td>
-<td align="left">0.991</td>
+<td align="left">1.000</td>
 </tr>
 </tbody>
 </table>
@@ -1658,44 +1700,44 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <tr class="odd">
 <td align="left">Class: built_up</td>
 <td align="left">0.996</td>
-<td align="left">0.959</td>
-<td align="left">0.989</td>
+<td align="left">0.918</td>
+<td align="left">0.996</td>
 </tr>
 <tr class="even">
 <td align="left">Class: cassava</td>
 <td align="left">1.000</td>
 <td align="left">1.000</td>
-<td align="left">0.870</td>
+<td align="left">0.902</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: grass</td>
-<td align="left">0.690</td>
-<td align="left">0.471</td>
-<td align="left">0.663</td>
+<td align="left">0.667</td>
+<td align="left">0.500</td>
+<td align="left">0.643</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
-<td align="left">0.877</td>
-<td align="left">0.467</td>
-<td align="left">0.851</td>
+<td align="left">0.883</td>
+<td align="left">0.580</td>
+<td align="left">0.853</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: sorghum</td>
-<td align="left">0.889</td>
-<td align="left">0.421</td>
-<td align="left">0.693</td>
+<td align="left">0.897</td>
+<td align="left">0.316</td>
+<td align="left">0.614</td>
 </tr>
 <tr class="even">
 <td align="left">Class: sweet_potato</td>
-<td align="left">0.992</td>
-<td align="left">0.875</td>
+<td align="left">1.000</td>
+<td align="left">0.824</td>
 <td align="left">0.979</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
+<td align="left">0.978</td>
 <td align="left">0.982</td>
-<td align="left">0.991</td>
-<td align="left">0.974</td>
+<td align="left">0.956</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
@@ -1718,60 +1760,263 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">Class: built_up</td>
-<td align="left">0.965</td>
-<td align="left">0.843</td>
-<td align="left">0.968</td>
+<td align="left">0.950</td>
+<td align="left">0.870</td>
+<td align="left">0.957</td>
 </tr>
 <tr class="even">
 <td align="left">Class: cassava</td>
-<td align="left">0.976</td>
 <td align="left">1.000</td>
-<td align="left">0.952</td>
+<td align="left">1.000</td>
+<td align="left">0.949</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: grass</td>
-<td align="left">0.921</td>
-<td align="left">0.333</td>
-<td align="left">0.937</td>
+<td align="left">0.933</td>
+<td align="left">0.522</td>
+<td align="left">0.900</td>
 </tr>
 <tr class="even">
 <td align="left">Class: maize</td>
-<td align="left">0.884</td>
-<td align="left">0.737</td>
-<td align="left">0.830</td>
+<td align="left">0.886</td>
+<td align="left">0.707</td>
+<td align="left">0.772</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: sorghum</td>
-<td align="left">0.964</td>
-<td align="left">0.889</td>
-<td align="left">0.952</td>
+<td align="left">0.909</td>
+<td align="left">0.667</td>
+<td align="left">0.909</td>
 </tr>
 <tr class="even">
 <td align="left">Class: sweet_potato</td>
-<td align="left">0.988</td>
+<td align="left">0.992</td>
 <td align="left">1.000</td>
-<td align="left">0.954</td>
+<td align="left">0.971</td>
 </tr>
 <tr class="odd">
 <td align="left">Class: trees</td>
-<td align="left">0.940</td>
-<td align="left">0.865</td>
-<td align="left">0.860</td>
+<td align="left">0.959</td>
+<td align="left">0.842</td>
+<td align="left">0.891</td>
 </tr>
 <tr class="even">
 <td align="left">Class: waterbody</td>
-<td align="left">0.964</td>
+<td align="left">0.965</td>
 <td align="left">1.000</td>
-<td align="left">0.982</td>
+<td align="left">1.000</td>
 </tr>
 </tbody>
 </table>
-<p>It is clear that fusion improved the accuracy of Sentinel 2 classification but UAV still retained the highest accuracy. Do we probably need a better framework to reap the benefits fo fusion?</p>
+<p>It is clear that fusion improved mapping accuracy of some crops and was definitely better than S2 classification. Do we probably need a better framework to reap the benefits fo fusion? Lets try another classification method.</p>
+</div>
+<div id="random-forest-rf" class="section level2">
+<h2>Random Forest (RF)</h2>
+<p>Use RF to classify the images (UAV, S2 and fused image) and compare crop class accuracy. Firts make plots training errot and variable importance. Note: the most important variable is one which has the highest increase in Mean Standard Error (MSE) when remove from the model.</p>
+<pre class="r"><code>rf.f &lt;- randomForest(code~., data=na.omit(as.data.frame(train.f[,-1]@data)), ntree = 200, importance=T)
+plot(rf.f, main=&#39;RF Training Error&#39;)</code></pre>
+<p><img src="mapping_files/figure-html/rf1-1.png" width="672" /></p>
+<pre class="r"><code>varImpPlot(rf.f,sort=TRUE, n.var=min(dim(s2h.fused)[3], nrow(rf.f$importance)), main=&#39;RF Variable importance&#39;)</code></pre>
+<p><img src="mapping_files/figure-html/rf1-2.png" width="672" /></p>
+<pre class="r"><code>knitr::kable(importance(rf.f))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">%IncMSE</th>
+<th align="right">IncNodePurity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">b</td>
+<td align="right">25.57633</td>
+<td align="right">1701.559</td>
+</tr>
+<tr class="even">
+<td align="left">g</td>
+<td align="right">22.91410</td>
+<td align="right">1925.232</td>
+</tr>
+<tr class="odd">
+<td align="left">r</td>
+<td align="right">31.01084</td>
+<td align="right">1918.301</td>
+</tr>
+<tr class="even">
+<td align="left">nir</td>
+<td align="right">33.10248</td>
+<td align="right">1631.812</td>
+</tr>
+</tbody>
+</table>
+<p>Estimate crop probabilities and map using RF. We will later use the probabilities in a conditional/markov random fields (CRFs/MRFs) classification framework which considers spatial context.</p>
+<pre class="r"><code>tic(&quot;RF mapping duration:&quot;)
+rf.f.map &lt;- superClass(brick(s2h.fused), train.f, responseCol = &quot;class&quot;,
+                model = &quot;rf&quot;)
+toc()</code></pre>
+<pre><code>## RF mapping duration:: 132.97 sec elapsed</code></pre>
+<pre class="r"><code>tic(&quot;RF probabilities duration:&quot;)
+rf.f.prob &lt;- superClass(brick(s2h.fused), train.f, responseCol = &quot;class&quot;,
+                model = &quot;rf&quot;, predType=&quot;prob&quot;)
+toc()</code></pre>
+<pre><code>## RF probabilities duration:: 155.88 sec elapsed</code></pre>
+<pre class="r"><code>#Display RF map.
+display(rf.f.map$map, &quot;Fused RF&quot;, nClasses)</code></pre>
+<p>Validate RF fused map using F1-score and compare it with MLC fusion.</p>
+<pre class="r"><code>val.rf.f &lt;- validateMap(rf.f.map$map, valid.f, responseCol=&quot;code&quot;, mode=&#39;classification&#39;)
+
+List.rf.f &lt;- accuracy(val.rf.f)
+knitr::kable(data.frame(RFfused=round(List.rf.f$byClass[,&#39;F1&#39;],3),
+            MLCfused=round(List.f$byClass[,&#39;F1&#39;],3)), align=&#39;l&#39;, caption = &#39;F1-score&#39;)</code></pre>
+<table>
+<caption>F1-score</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">RFfused</th>
+<th align="left">MLCfused</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: 1</td>
+<td align="left">0.986</td>
+<td align="left">0.976</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 2</td>
+<td align="left">0.949</td>
+<td align="left">0.925</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: 3</td>
+<td align="left">0.857</td>
+<td align="left">0.750</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 4</td>
+<td align="left">0.932</td>
+<td align="left">0.810</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: 5</td>
+<td align="left">0.917</td>
+<td align="left">0.733</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 6</td>
+<td align="left">0.982</td>
+<td align="left">0.975</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: 7</td>
+<td align="left">0.966</td>
+<td align="left">0.922</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 8</td>
+<td align="left">1.000</td>
+<td align="left">1.000</td>
+</tr>
+</tbody>
+</table>
+<p>RF gives a better accuracy on the fused product compared to MLC.</p>
+</div>
+<div id="mrf" class="section level2">
+<h2>MRF</h2>
+<p>Markov Random Fields (MRFs) and Conditional Random Fields (CRFs) techniques are one of the commonly used contextual classification methods. They offer a probabilistic framework that models spatial dependencies of labels (MRFs) with additional dependencies in data in the case of CRFs in a classified image (Kenduiywo 2016).</p>
+<pre class="r"><code>#Load CRF/MRF function
+source(paste0(&quot;D:/Code/Sleek/CRF_MRF.R&quot;))
+WithRef     &lt;- FALSE
+beta0         &lt;- 20
+Nneighb     &lt;- 4
+bCRF          &lt;- FALSE #If TRUE MOdel runs CRF
+
+#Take care of NA mask
+image &lt;- brick(s2h.fused)
+mrf_name &lt;- paste0(Path_out,&#39;Mpolonjeni_fused_MRF_map.tif&#39;)
+if(!file.exists(mrf_name)){
+  rf_MRF &lt;- CRF_MRF(image, WithRef, beta0, Nneighb, rf.f.map$map, rf.f.prob$map, bCRF, nClasses)
+  writeRaster(rf_MRF, mrf_name)
+}else{
+  rf_MRF &lt;- brick(mrf_name)
+}
+
+display(rf_MRF, &quot;Fused RF-MRF&quot;, nClasses)
+
+val.mrf.f &lt;- validateMap(rf_MRF, valid.f, responseCol=&quot;code&quot;, mode=&#39;classification&#39;)</code></pre>
+<p><img src="mapping_files/figure-html/crf1-1.png" width="672" /></p>
+<pre class="r"><code>List.mrf.f &lt;- accuracy(val.mrf.f)
+knitr::kable(data.frame(MRFfused=round(List.mrf.f$byClass[,&#39;F1&#39;],3),RFfused=round(List.rf.f$byClass[,&#39;F1&#39;],3),
+            MLCfused=round(List.f$byClass[,&#39;F1&#39;],3)), align=&#39;l&#39;, caption = &#39;F1-score&#39;)</code></pre>
+<table>
+<caption>F1-score</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">MRFfused</th>
+<th align="left">RFfused</th>
+<th align="left">MLCfused</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Class: 1</td>
+<td align="left">0.995</td>
+<td align="left">0.986</td>
+<td align="left">0.976</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 2</td>
+<td align="left">0.962</td>
+<td align="left">0.949</td>
+<td align="left">0.925</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: 3</td>
+<td align="left">0.887</td>
+<td align="left">0.857</td>
+<td align="left">0.750</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 4</td>
+<td align="left">0.968</td>
+<td align="left">0.932</td>
+<td align="left">0.810</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: 5</td>
+<td align="left">0.921</td>
+<td align="left">0.917</td>
+<td align="left">0.733</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 6</td>
+<td align="left">0.992</td>
+<td align="left">0.982</td>
+<td align="left">0.975</td>
+</tr>
+<tr class="odd">
+<td align="left">Class: 7</td>
+<td align="left">0.975</td>
+<td align="left">0.966</td>
+<td align="left">0.922</td>
+</tr>
+<tr class="even">
+<td align="left">Class: 8</td>
+<td align="left">0.996</td>
+<td align="left">1.000</td>
+<td align="left">1.000</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
 <p>Breiman, L. Random Forests. <em>Machine Learning</em> 45, 5–32 (2001). <a href="https://doi.org/10.1023/A:1010933404324" class="uri">https://doi.org/10.1023/A:1010933404324</a></p>
 <p>Y. Zou, G. Li and S. Wang, “The Fusion of Satellite and Unmanned Aerial Vehicle (UAV) Imagery for Improving Classification Performance,” <em>IEEE International Conference on Information and Automation (ICIA)</em>, 2018, pp. 836-841, doi: 10.1109/ICInfA.2018.8812312.</p>
+<p>Kenduiywo, B. <em>Spatial-temporal Dynamic Conditional Random Fields crop type mapping using radar images</em>. Technische Universitaet Darmstadt Prints (2016)</p>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
