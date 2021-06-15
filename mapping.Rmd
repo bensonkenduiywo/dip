@@ -41,7 +41,7 @@ Path_out    <- paste0(Root,"Output/")
 
 ```
 
-Load Mpolonjeni UAV images for mission 1--5 and Sentinel 2. We will mosaic the UAV images to one image at 1 m spatial resolution and save to disk later. Once this is done we skip this process every other time we ru the script.
+Load Mpolonjeni UAV images for mission 1--5 and Sentinel 2. We will mosaic the UAV images to one image at 1 m spatial resolution and save to disk later. Once this is done we skip this process every other time we run the script.
 
 ```{r d2}
 #Sentinel 2
@@ -374,17 +374,24 @@ knitr::kable(data.frame(UAV_ProducerAcc=round(List.v$byClass[,'Sensitivity'],3),
 It is clear that fusion improved mapping accuracy of some crops and was definitely better than S2 classification. Do we probably need a better framework to reap the benefits fo fusion? 
 Lets try another classification method.
 
-## Random Forest (RF)
+### Random Forest (RF)
 
-Use RF to classify the images (UAV, S2 and fused image) and compare crop class accuracy. Firts make plots training errot and variable importance. Note: the most important variable is one which has the highest increase in Mean Standard Error (MSE) when remove from the model. 
+Use RF to classify the images (UAV, S2 and fused image) and compare crop mapping accuracy with MLC. Firsts, we evaluate model training using plots of training error and variable importance. Note: the most important variable is one which has the highest increase in Mean Standard Error (MSE) when removed from the model training samples. We explore these plots using the PCA fused image as an example. From Figure \@ref(fig:rf1), the training error reduces with increase in number of trees. We set the number of trees to 250 because it has been established that over 200 trees RF estimates are stable (Hastie, Tibshirani, and Friedman 2011).
 
-```{r rf1, warning=FALSE}
-rf.f <- randomForest(code~., data=na.omit(as.data.frame(train.f[,-1]@data)), ntree = 200, importance=T)
-plot(rf.f, main='RF Training Error')
-varImpPlot(rf.f,sort=TRUE, n.var=min(dim(s2h.fused)[3], nrow(rf.f$importance)), main='RF Variable importance')
-knitr::kable(importance(rf.f))
+```{r rf1, warning=FALSE, fig.cap="F Training Error w.r.t number of trees."}
+rf.pca <- randomForest(code~., data=na.omit(as.data.frame(train.pca[,-1]@data)), ntree = 250, importance=T)
+plot(rf.pca, main='RF Training Error')
+
+#knitr::kable(importance(rf.pca))
 
 ```
+
+
+```{r rf2, warning=FALSE, fig.cap="RF Variable importance b ased on mean decrease in MSE."}
+varImpPlot(rf.pca,sort=TRUE, n.var=min(dim(pca)[3], nrow(rf.pca$importance)), type = 1)
+
+```
+Mean Decrease Gini (IncNodePurity) - This is a measure of variable importance based on the Gini impurity index (i.e. node purity\footnote{More useful variables achieve higher increases in node purities.}) used for the calculating the splits in trees. The higher the value of mean decrease accuracy or mean decrease gini score, the higher the importance of the variable to our model.
 
 Estimate crop probabilities and map using RF. We will later use the probabilities in a conditional/markov random fields (CRFs/MRFs) classification framework which considers spatial context.
 
