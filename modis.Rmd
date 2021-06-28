@@ -1,0 +1,75 @@
+---
+title: "Maize yield prediction"
+bibliography: eswatini_references.bib
+csl: "apa-6th-edition.csl"
+output: 
+  bookdown::word_document2:
+    toc: true
+    toc_depth: 3
+    number_sections: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Satellite data
+
+Get EVI, NDVI, Gross Primary Productivity (GPP), and Fraction of Photosynthetically Active Radiation (FPAR) MODIS products. NDVI and EVI products can be found in both Terra and Aqua satellites with product names **MOD13Q1** and **MYD13Q1** respectively at 20 m spatial resolution as 16 day composite. GPP 8-day composite is available at 1 km spatial resolution period with product names **MOD17A2** and **MYD17A2** in Terra and Aqua respectively [@12_NASA_2021].
+
+```{r m1}
+if (!"luna" %in% installed.packages()){
+  remotes::install_github("rspatial/luna")
+}
+library(luna)
+prod <- getProducts("^MOD13Q1|^MYD13Q1|^MOD17A2|^MYD17A2")
+knitr::kable(table(head(prod)), align = 'l')
+```
+
+We are almost ready to download the data. Let's get Eswatini country boundary and start data downloads. 
+
+```{r m2}
+library(raster)
+sz <- getData("GADM", country="SWZ", level=0)
+plot(sz)
+text(sz,sz$NAME_0)
+
+```
+
+Define data parameters: product name, start and end date, and area of interest. According [Food and Agriculture Organization (FAO)](http://www.fao.org/giews/countrybrief/country.jsp?code=SWZ), maize is grown in Eswatini between October--May with the growing season covering January--March. We adopt the growing season for yield prediction. We define date as follows: 
+
+```{r m3}
+start <- "2000-01-01"
+end <- "2019-12-31"
+
+```
+
+Thereafter, extract existing data files.
+
+```{r m4}
+product <- "MOD13Q1"
+mf <- luna::getModis(product, start, end, aoi=sz, download = FALSE)
+length(mf)
+```
+
+MODIS data can be download from [EarthData](https://urs.earthdata.nasa.gov/users). This requires specification of a storage directory, a user's name and password. Here, the password is saved in a directory. We download the maize growing season months only. 
+
+```{r m5}
+pass <- readRDS("earthdata.rds")
+modis_path <- "D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/raw/"  
+mstart <- "-01-01"
+mend <- "-03-31"
+for(y in 2000:2019){
+  cat(y,"downloading..\n")
+  start <- paste0(y,mstart)
+  end   <- paste0(y,mend)
+  luna::getModis(product, start, end, aoi=sz, download=TRUE,
+                     path=modis_path, username=pass$username,
+                     password=pass$password)
+}
+
+```
+
+## References
