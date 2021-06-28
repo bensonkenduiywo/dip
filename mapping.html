@@ -409,7 +409,7 @@ cat(&quot;Set variables and start processing\n&quot;)</code></pre>
 <pre><code>## Set variables and start processing</code></pre>
 <pre class="r"><code>Root        &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/&#39;
 Path_out    &lt;- paste0(Root,&quot;Output/&quot;)</code></pre>
-<p>Load Mpolonjeni UAV images for mission 1–5 and Sentinel 2. We will mosaic the UAV images to one image at 1 m spatial resolution and save to disk later. Once this is done we skip this process every other time we ru the script.</p>
+<p>Load Mpolonjeni UAV images for mission 1–5 and Sentinel 2. We will mosaic the UAV images to one image at 1 m spatial resolution and save to disk later. Once this is done we skip this process every other time we run the script.</p>
 <pre class="r"><code>#Sentinel 2
 path &lt;- list.files(paste0(Root,&#39;S2/interim/&#39;),pattern = (&quot;.tif$&quot;), recursive = TRUE, full.names = TRUE)
 s &lt;- rast(path)
@@ -1809,58 +1809,37 @@ print(&#39;Accuracy measures comparison&#39;)</code></pre>
 </tbody>
 </table>
 <p>It is clear that fusion improved mapping accuracy of some crops and was definitely better than S2 classification. Do we probably need a better framework to reap the benefits fo fusion? Lets try another classification method.</p>
+<div id="random-forest-rf" class="section level3">
+<h3>Random Forest (RF)</h3>
+<p>Use RF to classify the images (UAV, S2 and fused image) and compare crop mapping accuracy with MLC. Firsts, we evaluate model training using plots of training error and variable importance. Note: the most important variable is one which has the highest increase in Mean Standard Error (MSE) when removed from the model training samples. We explore these plots using the PCA fused image as an example. From Figure @ref(fig:rf1), the training error reduces with increase in number of trees. We set the number of trees to 250 because it has been established that over 200 trees RF estimates are stable (Hastie, Tibshirani, and Friedman 2011).</p>
+<pre class="r"><code>rf.pca &lt;- randomForest(code~., data=na.omit(as.data.frame(train.f[,-1]@data)), ntree = 250, importance=T)
+plot(rf.pca, main=&#39;RF Training Error&#39;)</code></pre>
+<div class="figure">
+<img src="mapping_files/figure-html/rf1-1.png" alt="F Training Error w.r.t number of trees." width="672" />
+<p class="caption">
+F Training Error w.r.t number of trees.
+</p>
 </div>
-<div id="random-forest-rf" class="section level2">
-<h2>Random Forest (RF)</h2>
-<p>Use RF to classify the images (UAV, S2 and fused image) and compare crop class accuracy. Firts make plots training errot and variable importance. Note: the most important variable is one which has the highest increase in Mean Standard Error (MSE) when remove from the model.</p>
-<pre class="r"><code>rf.f &lt;- randomForest(code~., data=na.omit(as.data.frame(train.f[,-1]@data)), ntree = 200, importance=T)
-plot(rf.f, main=&#39;RF Training Error&#39;)</code></pre>
-<p><img src="mapping_files/figure-html/rf1-1.png" width="672" /></p>
-<pre class="r"><code>varImpPlot(rf.f,sort=TRUE, n.var=min(dim(s2h.fused)[3], nrow(rf.f$importance)), main=&#39;RF Variable importance&#39;)</code></pre>
-<p><img src="mapping_files/figure-html/rf1-2.png" width="672" /></p>
-<pre class="r"><code>knitr::kable(importance(rf.f))</code></pre>
-<table>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="right">%IncMSE</th>
-<th align="right">IncNodePurity</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">b</td>
-<td align="right">25.57633</td>
-<td align="right">1701.559</td>
-</tr>
-<tr class="even">
-<td align="left">g</td>
-<td align="right">22.91410</td>
-<td align="right">1925.232</td>
-</tr>
-<tr class="odd">
-<td align="left">r</td>
-<td align="right">31.01084</td>
-<td align="right">1918.301</td>
-</tr>
-<tr class="even">
-<td align="left">nir</td>
-<td align="right">33.10248</td>
-<td align="right">1631.812</td>
-</tr>
-</tbody>
-</table>
+<pre class="r"><code>#knitr::kable(importance(rf.pca))</code></pre>
+<pre class="r"><code>varImpPlot(rf.pca,sort=TRUE, n.var=min(dim(s2h.fused)[3], nrow(rf.pca$importance)), type = 1)</code></pre>
+<div class="figure">
+<img src="mapping_files/figure-html/rf2-1.png" alt="RF Variable importance b ased on mean decrease in MSE." width="672" />
+<p class="caption">
+RF Variable importance b ased on mean decrease in MSE.
+</p>
+</div>
+<p>Mean Decrease Gini (IncNodePurity) - This is a measure of variable importance based on the Gini impurity index (i.e. node purity) used for the calculating the splits in trees. The higher the value of mean decrease accuracy or mean decrease gini score, the higher the importance of the variable to our model.</p>
 <p>Estimate crop probabilities and map using RF. We will later use the probabilities in a conditional/markov random fields (CRFs/MRFs) classification framework which considers spatial context.</p>
 <pre class="r"><code>tic(&quot;RF mapping duration:&quot;)
 rf.f.map &lt;- superClass(brick(s2h.fused), train.f, responseCol = &quot;class&quot;,
                 model = &quot;rf&quot;)
 toc()</code></pre>
-<pre><code>## RF mapping duration:: 132.97 sec elapsed</code></pre>
+<pre><code>## RF mapping duration:: 149.52 sec elapsed</code></pre>
 <pre class="r"><code>tic(&quot;RF probabilities duration:&quot;)
 rf.f.prob &lt;- superClass(brick(s2h.fused), train.f, responseCol = &quot;class&quot;,
                 model = &quot;rf&quot;, predType=&quot;prob&quot;)
 toc()</code></pre>
-<pre><code>## RF probabilities duration:: 155.88 sec elapsed</code></pre>
+<pre><code>## RF probabilities duration:: 160.81 sec elapsed</code></pre>
 <pre class="r"><code>#Display RF map.
 display(rf.f.map$map, &quot;Fused RF&quot;, nClasses)</code></pre>
 <p>Validate RF fused map using F1-score and compare it with MLC fusion.</p>
@@ -1922,6 +1901,7 @@ knitr::kable(data.frame(RFfused=round(List.rf.f$byClass[,&#39;F1&#39;],3),
 </tbody>
 </table>
 <p>RF gives a better accuracy on the fused product compared to MLC.</p>
+</div>
 </div>
 <div id="mrf" class="section level2">
 <h2>MRF</h2>

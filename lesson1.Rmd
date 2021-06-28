@@ -29,7 +29,7 @@ if(!require(sen2r))install.packages('sen2r')
 library(sen2r)
 ```
 
-Let us use a GUI to donwload sentinel 2 data.
+Let us use a GUI to download sentinel 2 data.
 
 ```{r s2}
 #sen2r()
