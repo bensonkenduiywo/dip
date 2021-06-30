@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Satellite data
 
-Get EVI, NDVI, Gross Primary Productivity (GPP), and Fraction of Photosynthetically Active Radiation (FPAR) MODIS products. NDVI and EVI products can be found in both Terra and Aqua satellites with product names **MOD13Q1** and **MYD13Q1** respectively at 20 m spatial resolution as 16 day composite. GPP 8-day composite is available at 1 km spatial resolution period with product names **MOD17A2** and **MYD17A2** in Terra and Aqua respectively [@12_NASA_2021].
+Get EVI, NDVI, Gross Primary Productivity (GPP), and Fraction of Photosynthetically Active Radiation (FPAR) MODIS products. NDVI and EVI products can be found in both Terra and Aqua satellites with product names **MOD13Q1** and **MYD13Q1** respectively at 250 m spatial resolution as 16 day composite. GPP 8-day composite is available at 500 km spatial resolution period with product names **MOD17A2H** and **MYD17A2H** in Terra and Aqua respectively [@12_NASA_2021]. FPAR 8-day composite is available at 500 m spatial resolution as combined product of Terra and Aqua coded as **MCD15A2H**.
 
 ```{r m1}
 if (!"luna" %in% installed.packages()){
@@ -25,7 +25,7 @@ if (!"luna" %in% installed.packages()){
 }
 library(luna)
 prod <- getProducts("^MOD13Q1|^MYD13Q1|^MOD17A2|^MYD17A2")
-knitr::kable(table(head(prod)), align = 'l')
+knitr::kable(table(head(prod, n=3)), align = 'l')
 ```
 
 We are almost ready to download the data. Let's get Eswatini country boundary and start data downloads. 
@@ -41,7 +41,7 @@ text(sz,sz$NAME_0)
 Define data parameters: product name, start and end date, and area of interest. According [Food and Agriculture Organization (FAO)](http://www.fao.org/giews/countrybrief/country.jsp?code=SWZ), maize is grown in Eswatini between October--May with the growing season covering January--March. We adopt the growing season for yield prediction. We define date as follows: 
 
 ```{r m3}
-start <- "2000-01-01"
+start <- "2018-01-01"
 end <- "2019-12-31"
 
 ```
@@ -72,4 +72,9 @@ for(y in 2000:2019){
 
 ```
 
+Similarly, GPP and FPAR can be downloaded by changing the product type e.g. **MCD15A2H** for FPAR. Next we explore the images we have downloaded and start extracting information we require for yield prediction.
+
+[NEXT PAGE](MODISprocessing.html).
+
 ## References
+

@@ -11,7 +11,7 @@
 
 
 
-<title>index.knit</title>
+<title>Maize yield prediction</title>
 
 <script src="site_libs/header-attrs-2.8/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -58,6 +58,28 @@ if (window.hljs) {
 
 
 
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
 
 <link rel="stylesheet" href="styles.css" type="text/css" />
 
@@ -269,9 +291,6 @@ $(document).ready(function () {
     <li>
       <a href="mapping.html">Crop mapping</a>
     </li>
-    <li>
-      <a href="modis.html">Yield prediction</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -309,39 +328,173 @@ $(document).ready(function () {
 
 
 
+<h1 class="title toc-ignore">Maize yield prediction</h1>
 
 </div>
 
 
-<div id="about-me" class="section level3">
-<h3>About me</h3>
-An overview of my research activities is available here:
-<div itemscope="" itemtype="https://schema.org/Person">
-<a itemprop="sameAs" content="https://orcid.org/0000-0002-8448-0499" href="https://orcid.org/0000-0002-8448-0499" target="orcid.widget" rel="me noopener noreferrer" style="vertical-align:top;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" style="width:1em;margin-right:.5em;" alt="ORCID iD icon">https://orcid.org/0000-0002-8448-0499</a>
+<div id="satellite-data" class="section level2">
+<h2>Satellite data</h2>
+<p>Get EVI, NDVI, Gross Primary Productivity (GPP), and Fraction of Photosynthetically Active Radiation (FPAR) MODIS products. NDVI and EVI products can be found in both Terra and Aqua satellites with product names <strong>MOD13Q1</strong> and <strong>MYD13Q1</strong> respectively at 250 m spatial resolution as 16 day composite. GPP 8-day composite is available at 500 km spatial resolution period with product names <strong>MOD17A2H</strong> and <strong>MYD17A2H</strong> in Terra and Aqua respectively <span class="citation">(NASA, 2021)</span>. FPAR 8-day composite is available at 500 m spatial resolution as combined product of Terra and Aqua coded as <strong>MCD15A2H</strong>.</p>
+<pre class="r"><code>if (!&quot;luna&quot; %in% installed.packages()){
+  remotes::install_github(&quot;rspatial/luna&quot;)
+}
+library(luna)
+prod &lt;- getProducts(&quot;^MOD13Q1|^MYD13Q1|^MOD17A2|^MYD17A2&quot;)
+knitr::kable(table(head(prod, n=3)), align = &#39;l&#39;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">provider</th>
+<th align="left">concept_id</th>
+<th align="left">short_name</th>
+<th align="left">version</th>
+<th align="left">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C107705237-LPDAAC_ECS</td>
+<td align="left">MOD13Q1</td>
+<td align="left">005</td>
+<td align="left">1</td>
+</tr>
+<tr class="even">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C115315503-LPDAAC_ECS</td>
+<td align="left">MOD13Q1</td>
+<td align="left">005</td>
+<td align="left">0</td>
+</tr>
+<tr class="odd">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C117500873-LPDAAC_ECS</td>
+<td align="left">MOD13Q1</td>
+<td align="left">005</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C107705237-LPDAAC_ECS</td>
+<td align="left">MOD17A2</td>
+<td align="left">005</td>
+<td align="left">0</td>
+</tr>
+<tr class="odd">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C115315503-LPDAAC_ECS</td>
+<td align="left">MOD17A2</td>
+<td align="left">005</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C117500873-LPDAAC_ECS</td>
+<td align="left">MOD17A2</td>
+<td align="left">005</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C107705237-LPDAAC_ECS</td>
+<td align="left">MYD13Q1</td>
+<td align="left">005</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C115315503-LPDAAC_ECS</td>
+<td align="left">MYD13Q1</td>
+<td align="left">005</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">LPDAAC_ECS</td>
+<td align="left">C117500873-LPDAAC_ECS</td>
+<td align="left">MYD13Q1</td>
+<td align="left">005</td>
+<td align="left">0</td>
+</tr>
+</tbody>
+</table>
+<p>We are almost ready to download the data. Let’s get Eswatini country boundary and start data downloads.</p>
+<pre class="r"><code>library(raster)</code></pre>
+<pre><code>## Loading required package: sp</code></pre>
+<pre class="r"><code>sz &lt;- getData(&quot;GADM&quot;, country=&quot;SWZ&quot;, level=0)
+plot(sz)
+text(sz,sz$NAME_0)</code></pre>
+<p><img src="modis_files/figure-html/m2-1.png" width="672" /></p>
+<p>Define data parameters: product name, start and end date, and area of interest. According <a href="http://www.fao.org/giews/countrybrief/country.jsp?code=SWZ">Food and Agriculture Organization (FAO)</a>, maize is grown in Eswatini between October–May with the growing season covering January–March. We adopt the growing season for yield prediction. We define date as follows:</p>
+<pre class="r"><code>start &lt;- &quot;2018-01-01&quot;
+end &lt;- &quot;2019-12-31&quot;</code></pre>
+<p>Thereafter, extract existing data files.</p>
+<pre class="r"><code>product &lt;- &quot;MOD13Q1&quot;
+mf &lt;- luna::getModis(product, start, end, aoi=sz, download = FALSE)
+length(mf)</code></pre>
+<pre><code>## [1] 70</code></pre>
+<p>MODIS data can be download from <a href="https://urs.earthdata.nasa.gov/users">EarthData</a>. This requires specification of a storage directory, a user’s name and password. Here, the password is saved in a directory. We download the maize growing season months only.</p>
+<pre class="r"><code>pass &lt;- readRDS(&quot;earthdata.rds&quot;)
+modis_path &lt;- &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/raw/&quot;  
+mstart &lt;- &quot;-01-01&quot;
+mend &lt;- &quot;-03-31&quot;
+for(y in 2000:2019){
+  cat(y,&quot;downloading..\n&quot;)
+  start &lt;- paste0(y,mstart)
+  end   &lt;- paste0(y,mend)
+  luna::getModis(product, start, end, aoi=sz, download=TRUE,
+                     path=modis_path, username=pass$username,
+                     password=pass$password)
+}</code></pre>
+<pre><code>## 2000 downloading..
+## 
+## 2001 downloading..
+## 
+## 2002 downloading..
+## 
+## 2003 downloading..
+## 
+## 2004 downloading..
+## 
+## 2005 downloading..
+## 
+## 2006 downloading..
+## 
+## 2007 downloading..
+## 
+## 2008 downloading..
+## 
+## 2009 downloading..
+## 
+## 2010 downloading..
+## 
+## 2011 downloading..
+## 
+## 2012 downloading..
+## 
+## 2013 downloading..
+## 
+## 2014 downloading..
+## 
+## 2015 downloading..
+## 
+## 2016 downloading..
+## 
+## 2017 downloading..
+## 
+## 2018 downloading..
+## 
+## 2019 downloading..</code></pre>
+<p>Similarly, GPP and FPAR can be downloaded by changing the product type e.g. <strong>MCD15A2H</strong> for FPAR. Next we explore the images we have downloaded and start extracting information we require for yield prediction.</p>
+<p><a href="MODISprocessing.html">NEXT PAGE</a>.</p>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" line-spacing="2">
+<div id="ref-12_NASA_2021" class="csl-entry">
+NASA. (2021). <em><span>Data Products</span></em>. Retrieved from <a href="https://modis.gsfc.nasa.gov/data/dataprod/index.php">https://modis.gsfc.nasa.gov/data/dataprod/index.php</a>
 </div>
 </div>
-<div id="background" class="section level3">
-<h3>Background</h3>
-<p>The goal of this tutorial is to introduce practical aspects of digital image analysis/processing (DIP/DIA) principles in R.</p>
-</div>
-<div id="structure" class="section level3">
-<h3>Structure</h3>
-<p>A section of the tutorials introduces the basics of data manipulation in R for the novice users while the other sections contains tutorials related to DIP. The tutorial is organized as follows:</p>
-<ol style="list-style-type: decimal">
-<li><a href="https://bensonkenduiywo.github.io/intro2geostats/ex1_intro2R.html">Manipulating data in R</a>.</li>
-<li><a href="lesson1.html">Data storage schema</a>.</li>
-<li><a href="fusion.html">Image fusion</a></li>
-<li><a href="mapping.html">Image classification</a></li>
-<li><a href="modis.html">Maize yield prediction</a></li>
-</ol>
-</div>
-<div id="resources" class="section level3">
-<h3>Resources</h3>
-<p>We will use R software. R software is opensource and can be downloaded from <a href="https://cran.r-project.org/" class="uri">https://cran.r-project.org/</a>. A suitable R user interface that we shall use is <a href="https://rstudio.com/products/rstudio/download/">R Studio</a>. First download and install the latest version of R followed by the editor (RStudio). Other editors are available and you are free to use depending on your preference or previous experience. You will also need <a href="https://gitforwindows.org/">Git</a> for version control in Rstudio and your <a href="https://github.com/">Github</a> account. For more details on version control with Git in rstudio <a href="https://support.rstudio.com/hc/en-us/articles/200532077-Version-Control-with-Git-and-SVN">click here</a>.</p>
-</div>
-<div id="references" class="section level3">
-<h3>References</h3>
-<p>Caers, J. (2005). <a href="https://store.spe.org/Petroleum-Geostatistics-P45.aspx"><em>Petroleum geostatistics</em></a>. Society of Petroleum Engineers Richardson</p>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>

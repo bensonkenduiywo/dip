@@ -18,6 +18,8 @@ navbar:
           href: fusion.html   
         - text: "Crop mapping"
           href: mapping.html  
+        - text: "Yield prediction"
+          href: modis.html 
   right:
     - icon: fa-envelope fa-lg
       href: mailto:bensonkemboi@gmail.com

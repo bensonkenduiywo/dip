@@ -20,7 +20,7 @@ A section of the tutorials introduces the basics of data manipulation in R for t
 2. [Data storage schema](lesson1.html).
 3. [Image fusion](fusion.html)
 4. [Image classification](mapping.html)
-
+5. [Maize yield prediction](modis.html)
 
 ### Resources
 
