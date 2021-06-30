@@ -1,0 +1,32 @@
+---
+title: "Indices extraction"
+author: "Benson Kenduiywo"
+date: "30/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## LOAD MODIS IMAGES
+
+Here we load previously downloaded files.
+
+```{r m1}
+root <- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/'
+n <- list.files(paste0(root,'raw'), pattern=glob2rx("*MOD13Q1*"),full.names=T)
+length(n)
+```
+
+Properties of any of the images can be explored as follows:
+
+1. The coordinate reference system (CRS)
+
+```{r m2}
+library(terra)
+r <- rast(n[1])
+
+```
+
+
