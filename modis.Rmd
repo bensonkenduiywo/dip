@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Satellite data
 
-Get EVI, NDVI, Gross Primary Productivity (GPP), and Fraction of Photosynthetically Active Radiation (FPAR) MODIS products. NDVI and EVI products can be found in both Terra and Aqua satellites with product names **MOD13Q1** and **MYD13Q1** respectively at 250 m spatial resolution as 16 day composite. GPP 8-day composite is available at 500 km spatial resolution period with product names **MOD17A2H** and **MYD17A2H** in Terra and Aqua respectively [@12_NASA_2021]. FPAR 8-day composite is available at 500 m spatial resolution as combined product of Terra and Aqua coded as **MCD15A2H**.
+Get EVI, NDVI, Gross Primary Productivity (GPP), and Fraction of Photosynthetically Active Radiation (FPAR) MODIS products. NDVI and EVI products can be found in both Terra and Aqua satellites with product names **MOD13Q1** and **MYD13Q1** respectively at 250 m spatial resolution as 16 day composite. GPP 8-day composite is available at 500 m spatial resolution period with product names **MOD17A2H** and **MYD17A2H** in Terra and Aqua respectively [@12_NASA_2021]. FPAR 8-day composite is available at 500 m spatial resolution as combined product of Terra and Aqua coded as **MCD15A2H**.
 
 ```{r m1}
 if (!"luna" %in% installed.packages()){
