@@ -9,10 +9,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Benson Kenduiywo" />
 
 
-<title>Indices extraction</title>
+<title>MODIS data processing</title>
 
 <script src="site_libs/header-attrs-2.8/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -30,6 +29,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -222,6 +224,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -229,6 +294,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -310,32 +385,229 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Indices extraction</h1>
-<h4 class="author">Benson Kenduiywo</h4>
-<h4 class="date">30/06/2021</h4>
+<h1 class="title toc-ignore">MODIS data processing</h1>
 
 </div>
 
 
-<div id="load-modis-images" class="section level2">
-<h2>LOAD MODIS IMAGES</h2>
-<p>Here we load previously downloaded files.</p>
-<pre class="r"><code>root &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/&#39;
+<p>After downloading MODIS data, it is necessary to apply quality mask to the desired image bands. The quality flags that come with the images indicate the conditions of each pixel with respect cloud, aerosol, water presence, and any other failures/errors. This section covers these aspects.</p>
+<div id="vegetation-indices" class="section level2">
+<h2>Vegetation Indices</h2>
+<p>Here we load previously downloaded NDVI and EVI files and define scale factor their scale factor.</p>
+<pre class="r"><code>sf &lt;- 0.0001 #scalefactor
+root &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/&#39;
 n &lt;- list.files(paste0(root,&#39;raw&#39;), pattern=glob2rx(&quot;*MOD13Q1*&quot;),full.names=T)
 length(n)</code></pre>
-<pre><code>## [1] 204</code></pre>
+<pre><code>## [1] 221</code></pre>
 <p>Properties of any of the images can be explored as follows:</p>
 <ol style="list-style-type: decimal">
-<li>The coordinate reference system (CRS)</li>
+<li>The coordinate reference system (CRS).</li>
 </ol>
 <pre class="r"><code>library(terra)</code></pre>
 <pre><code>## terra version 1.2.10</code></pre>
-<pre class="r"><code>r &lt;- rast(n[1])</code></pre>
+<pre class="r"><code>r &lt;- rast(n[1])
+r</code></pre>
+<pre><code>## class       : SpatRaster 
+## dimensions  : 4800, 4800, 12  (nrow, ncol, nlyr)
+## resolution  : 231.6564, 231.6564  (x, y)
+## extent      : 2223901, 3335852, -3335852, -2223901  (xmin, xmax, ymin, ymax)
+## coord. ref. : +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs 
+## sources     : MOD13Q1.A2000049.h20v11.006.2015136104756.hdf:MODIS_Grid_16DAY_250m_500m_VI:250m 16 days NDVI  
+##               MOD13Q1.A2000049.h20v11.006.2015136104756.hdf:MODIS_Grid_16DAY_250m_500m_VI:250m 16 days EVI  
+##               MOD13Q1.A2000049.h20v11.006.2015136104756.hdf:MODIS_Grid_16DAY_250m_500m_VI:250m 16 days VI Quality  
+##               ... and 9 more source(s)
+## names       : MODIS~NDVI&quot;, MODIS~ EVI&quot;, MODIS~lity&quot;, MODIS~ance&quot;, MODIS~ance&quot;, MODIS~ance&quot;, ...</code></pre>
+<pre class="r"><code>crs(r)</code></pre>
+<pre><code>## [1] &quot;PROJCRS[\&quot;unnamed\&quot;,\n    BASEGEOGCRS[\&quot;Unknown datum based upon the custom spheroid\&quot;,\n        DATUM[\&quot;Not specified (based on custom spheroid)\&quot;,\n            ELLIPSOID[\&quot;Custom spheroid\&quot;,6371007.181,0,\n                LENGTHUNIT[\&quot;metre\&quot;,1,\n                    ID[\&quot;EPSG\&quot;,9001]]]],\n        PRIMEM[\&quot;Greenwich\&quot;,0,\n            ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433,\n                ID[\&quot;EPSG\&quot;,9122]]]],\n    CONVERSION[\&quot;unnamed\&quot;,\n        METHOD[\&quot;Sinusoidal\&quot;],\n        PARAMETER[\&quot;Longitude of natural origin\&quot;,0,\n            ANGLEUNIT[\&quot;degree\&quot;,0.0174532925199433],\n            ID[\&quot;EPSG\&quot;,8802]],\n        PARAMETER[\&quot;False easting\&quot;,0,\n            LENGTHUNIT[\&quot;Meter\&quot;,1],\n            ID[\&quot;EPSG\&quot;,8806]],\n        PARAMETER[\&quot;False northing\&quot;,0,\n            LENGTHUNIT[\&quot;Meter\&quot;,1],\n            ID[\&quot;EPSG\&quot;,8807]]],\n    CS[Cartesian,2],\n        AXIS[\&quot;easting\&quot;,east,\n            ORDER[1],\n            LENGTHUNIT[\&quot;Meter\&quot;,1]],\n        AXIS[\&quot;northing\&quot;,north,\n            ORDER[2],\n            LENGTHUNIT[\&quot;Meter\&quot;,1]]]&quot;</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>number of cells, rows, columns, and layers.</li>
+</ol>
+<pre class="r"><code>dim(r)</code></pre>
+<pre><code>## [1] 4800 4800   12</code></pre>
+<pre class="r"><code>nrow(r)</code></pre>
+<pre><code>## [1] 4800</code></pre>
+<pre class="r"><code>ncol(r)</code></pre>
+<pre><code>## [1] 4800</code></pre>
+<pre class="r"><code>nlyr(r)</code></pre>
+<pre><code>## [1] 12</code></pre>
+<pre class="r"><code>ncell(r)</code></pre>
+<pre><code>## [1] 23040000</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>spatial resolution</li>
+</ol>
+<pre class="r"><code>res(r)</code></pre>
+<pre><code>## [1] 231.6564 231.6564</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>layer names.</li>
+</ol>
+<pre class="r"><code>names(r)</code></pre>
+<pre><code>##  [1] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days NDVI\&quot;&quot;                     
+##  [2] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days EVI\&quot;&quot;                      
+##  [3] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days VI Quality\&quot;&quot;               
+##  [4] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days red reflectance\&quot;&quot;          
+##  [5] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days NIR reflectance\&quot;&quot;          
+##  [6] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days blue reflectance\&quot;&quot;         
+##  [7] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days MIR reflectance\&quot;&quot;          
+##  [8] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days view zenith angle\&quot;&quot;        
+##  [9] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days sun zenith angle\&quot;&quot;         
+## [10] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days relative azimuth angle\&quot;&quot;   
+## [11] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days composite day of the year\&quot;&quot;
+## [12] &quot;MODIS_Grid_16DAY_250m_500m_VI:\&quot;250m 16 days pixel reliability\&quot;&quot;</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>plot NDVI and EVI images</li>
+</ol>
+<pre class="r"><code>sf &lt;- 0.0001
+par(mfrow=c(2,2),mar = c(4, 4, 1.4, 0.1)) #c(bottom, left, top, right)
+
+temp &lt;- r[[1]]
+temp &lt;- temp*sf
+plot(temp, main=&#39;NDVI&#39;)
+temp &lt;- r[[2]]
+temp &lt;- temp*sf
+plot(temp, main=&#39;EVI&#39;)</code></pre>
+<p><img src="MODISprocessing_files/figure-html/m6-1.png" width="672" /></p>
+</div>
+<div id="quality" class="section level2">
+<h2>Quality</h2>
+<p>Reference to this <a href="https://lpdaac.usgs.gov/documents/103/MOD13_User_Guide_V6.pdf">table</a> create quality flags based on ‘250m 16 days VI Quality’ band. Basically, pixels that are cloudy, faulty, have high aerosols, and with water are excluded/mask out. The quality information is stored in a somewhat complicated bit-encoding format. This allows for very efficient storage, but it makes it much harder to use (see <a href="https://lpdaac.usgs.gov/documents/103/MOD13_User_Guide_V6.pdf">Table 5</a> of the user guide).</p>
+<pre class="r"><code>from &lt;- c(1,2,6,11)
+to   &lt;- c(2,5,7,13)
+reject &lt;- c(&quot;10,11&quot;, &quot;1101,1110,1111&quot;, &quot;11&quot;, &quot;101,110,111&quot;)
+qa_bits &lt;- cbind(from, to, reject)
+qa_bits</code></pre>
+<pre><code>##      from to   reject          
+## [1,] &quot;1&quot;  &quot;2&quot;  &quot;10,11&quot;         
+## [2,] &quot;2&quot;  &quot;5&quot;  &quot;1101,1110,1111&quot;
+## [3,] &quot;6&quot;  &quot;7&quot;  &quot;11&quot;            
+## [4,] &quot;11&quot; &quot;13&quot; &quot;101,110,111&quot;</code></pre>
+<p>Unsuitable pixels can now be masked out based on the defined QA bits.</p>
+<pre class="r"><code>library(luna)
+qc &lt;- r[[3]]
+quality_mask &lt;- modis_mask(qc, 16, qa_bits)
+plot(quality_mask, main=&quot;Quality mask&quot;)</code></pre>
+<p><img src="MODISprocessing_files/figure-html/q2-1.png" width="672" /></p>
+<p>The plot shows the pixels that pass the quality check (i.e., the pixels that shall be retained). Subsequently, the mask operation can be applied to all other images considering <strong>NDVI</strong> and <strong>EVI</strong> quality flags. For instance, the **NDVI* quality mask can be obtained as shown below.</p>
+<pre class="r"><code>temp &lt;- r[[1]]*sf
+rmask &lt;- mask(temp, quality_mask)
+plot(temp,main=&#39;quality masked image&#39;)</code></pre>
+<p><img src="MODISprocessing_files/figure-html/q3-1.png" width="672" /></p>
+<p>The data can also be normalized using minimum and maximum values of the image.</p>
+<pre class="r"><code>minMax &lt;- function(x){
+  if(class(x)==&quot;SpatRaster&quot;){
+    z &lt;- minmax(x)
+    y &lt;- (x-z[1])/(z[2]-z[1])
+    return(y)
+  }else{
+    print(&quot;x is not a SpatRaster object&quot;)
+  }
+}</code></pre>
+<p>Normalize the image.</p>
+<pre class="r"><code>nrmask &lt;- minMax(rmask)
+plot(nrmask)</code></pre>
+<p><img src="MODISprocessing_files/figure-html/q4-1.png" width="672" /></p>
+</div>
+<div id="monthly-vegetation-indices-computation" class="section level2">
+<h2>Monthly vegetation indices computation</h2>
+<p>Previous section has illustrated how quality assurance (QA) can be applied to an image using NDVI as an example. The same process can be applied to EVI. In this section, the quality assurance information available in the third band of <strong>MOD13Q1</strong> product is used to identify the bad pixels to remove in both NDVI and EVI images. The indices are then spatial aggregated over Eswatini boundary.</p>
+<pre class="r"><code>library(raster)</code></pre>
+<pre><code>## Loading required package: sp</code></pre>
+<pre class="r"><code>sz &lt;- getData(&quot;GADM&quot;, country=&quot;SWZ&quot;, level=0)
+#Change vector boundary coordinate reference system, so that it matches that of the MODIS data.
+prj &lt;- crs(rmask)
+poly &lt;- project(vect(sz),prj)
+for(i in 1:length(n)){
+  path &lt;- paste0(root,&#39;processed/&#39;)
+  filename &lt;- paste0(path,gsub(&quot;.hdf&quot;,&quot;&quot;,basename(n[i])),&#39;.tif&#39;)
+  if(!file.exists(filename)){
+    r &lt;- rast(n[i])
+    qc &lt;- r[[3]]
+    quality_mask &lt;- modis_mask(qc, 16, qa_bits)
+    #NDVI
+    temp &lt;- r[[1]]*sf
+    ndvi &lt;- mask(temp, quality_mask)
+    ndvi &lt;- minMax(ndvi)
+    names(ndvi) &lt;- &quot;NDVI&quot;
+    #EVI
+    temp &lt;- r[[2]]*sf
+    evi &lt;- mask(temp, quality_mask)
+    evi &lt;- minMax(evi)
+    names(evi) &lt;- &quot;EVI&quot;
+    temp &lt;- c(ndvi, evi)
+    path &lt;- paste0(root,&#39;processed/&#39;)
+    filename &lt;- paste0(path,gsub(&quot;.hdf&quot;,&quot;&quot;,basename(n[i])),&#39;.tif&#39;)
+    #Crop to AOI
+    out &lt;- crop(temp, poly)
+    writeRaster(out, filename, overwrite=TRUE)
+  }
+}</code></pre>
+</div>
+<div id="monthly-gpp-and-fpar" class="section level2">
+<h2>Monthly GPP and FPAR</h2>
+<p>Gross Primary Productivity (GPP) and Fraction of Photosynthetically Active Radiation (FPAR)/ Leaf Area Index (LAI) (<em>MCD15A2H</em>) monthly can be computed in a similar way like the vegetation indices done previously. Start by processing FPAR/LAI; below are the files.</p>
+<pre class="r"><code>n &lt;- list.files(paste0(root,&#39;raw&#39;), pattern=glob2rx(&quot;*MCD15A2H*&quot;),full.names=T)
+length(n)</code></pre>
+<pre><code>## [1] 368</code></pre>
+<p>Here, QA information available in <a href="https://lpdaac.usgs.gov/documents/624/MOD15_User_Guide_V6.pdf">Table 5</a> of the user guide is applied and AOI files for FPAR/LAI saved to disk. in</p>
+<pre class="r"><code>from &lt;- c(2,3,5)
+to   &lt;- c(2,4,7)
+reject &lt;- c(&quot;1&quot;, &quot;01&quot;, &quot;100&quot;)
+qa_bits &lt;- cbind(from, to, reject)
+qa_bits</code></pre>
+<pre><code>##      from to  reject
+## [1,] &quot;2&quot;  &quot;2&quot; &quot;1&quot;   
+## [2,] &quot;3&quot;  &quot;4&quot; &quot;01&quot;  
+## [3,] &quot;5&quot;  &quot;7&quot; &quot;100&quot;</code></pre>
+<pre class="r"><code>for(i in 1:length(n)){
+  path &lt;- paste0(root,&#39;processed/&#39;)
+  filename &lt;- paste0(path,gsub(&quot;.hdf&quot;,&quot;&quot;,basename(n[i])),&#39;.tif&#39;)
+  if(!file.exists(filename)){
+    r &lt;- rast(n[i])
+    qc &lt;- r[[3]]
+    quality_mask &lt;- modis_mask(qc, 8, qa_bits)
+    #FPAR
+    sf &lt;- 100
+    temp &lt;- r[[1]]*sf
+    fpar &lt;- mask(temp, quality_mask)
+    names(fpar) &lt;- &quot;FPAR&quot;
+    #LAI
+    sf &lt;- 10
+    temp &lt;- r[[2]]*sf
+    lai &lt;- mask(temp, quality_mask)
+    names(lai) &lt;- &quot;LAI&quot;
+    temp &lt;- c(fpar, lai)
+    #Crop to AOI
+    out &lt;- crop(temp, poly)
+    writeRaster(out,filename,overwrite=TRUE)
+  }
+}</code></pre>
+<p>Finally, in a similar fashion QA information can applied be to MODIS GPP (<em>MOD17A2H</em>) product to obtain monthly GPP. The <a href="https://landweb.modaps.eosdis.nasa.gov/QA_WWW/forPage/user_guide/MOD17UsersGuide2019.pdf">QA</a> bits in this case are similar to those in FPAR/LAI.</p>
+<pre class="r"><code>n &lt;- list.files(paste0(root,&#39;raw&#39;), pattern=glob2rx(&quot;*MOD17A2H*&quot;),full.names=T)
+length(n)</code></pre>
+<pre><code>## [1] 265</code></pre>
+<pre class="r"><code>for(i in 1:length(n)){
+  path &lt;- paste0(root,&#39;processed/&#39;)
+  filename &lt;- paste0(path,gsub(&quot;.hdf&quot;,&quot;&quot;,basename(n[i])),&#39;.tif&#39;)
+  if(!file.exists(filename)){
+    r &lt;- rast(n[i])
+    qc &lt;- r[[3]]
+    quality_mask &lt;- modis_mask(qc, 8, qa_bits)
+    temp &lt;- r[[1]]
+    gpp &lt;- mask(temp, quality_mask)
+    names(gpp) &lt;- &quot;GPP&quot;
+    
+    #Crop to AOI
+    out &lt;- crop(gpp, poly)
+    writeRaster(out, filename, overwrite=TRUE)
+  }
+}</code></pre>
+<p><a href="modis.html">PREVIOUS PAGE</a> &lt;&lt;&lt; &gt;&gt;&gt; <a href="indices.html">NEXT PAGE</a>.</p>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
 
 
+</div>
+</div>
 
 </div>
 
@@ -368,6 +640,32 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

@@ -1,19 +1,26 @@
 ---
-title: "Indices extraction"
-author: "Benson Kenduiywo"
-date: "30/06/2021"
-output: html_document
+title: "MODIS data processing"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## LOAD MODIS IMAGES
+After downloading MODIS data, it is necessary to apply quality mask to the desired image bands. The quality flags that come with the images indicate the conditions of each pixel with respect cloud, aerosol, water presence, and any other failures/errors. This section covers these aspects.
 
-Here we load previously downloaded files.
+## Vegetation Indices
+
+Here we load previously downloaded NDVI and EVI files and define scale factor their scale factor.
 
 ```{r m1}
+sf <- 0.0001 #scalefactor
 root <- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/'
 n <- list.files(paste0(root,'raw'), pattern=glob2rx("*MOD13Q1*"),full.names=T)
 length(n)
@@ -21,12 +28,210 @@ length(n)
 
 Properties of any of the images can be explored as follows:
 
-1. The coordinate reference system (CRS)
+1. The coordinate reference system (CRS).
 
 ```{r m2}
 library(terra)
 r <- rast(n[1])
+r
+crs(r)
+```
+
+2. number of cells, rows, columns, and layers.
+
+```{r m3}
+dim(r)
+
+nrow(r)
+
+ncol(r)
+
+nlyr(r)
+
+ncell(r)
+```
+
+3. spatial resolution
+
+```{r m4}
+res(r)
+```
+
+4. layer names.
+
+```{r m5}
+names(r)
+```
+
+5. plot NDVI and EVI images
+
+```{r m6}
+sf <- 0.0001
+par(mfrow=c(2,2),mar = c(4, 4, 1.4, 0.1)) #c(bottom, left, top, right)
+
+temp <- r[[1]]
+temp <- temp*sf
+plot(temp, main='NDVI')
+temp <- r[[2]]
+temp <- temp*sf
+plot(temp, main='EVI')
+```
+
+## Quality
+
+Reference to this [table](https://lpdaac.usgs.gov/documents/103/MOD13_User_Guide_V6.pdf) create quality flags based on '250m 16 days VI Quality' band. Basically, pixels that are cloudy, faulty, have high aerosols, and with water are excluded/mask out. The quality information is stored in a somewhat complicated bit-encoding format. This allows for very efficient storage, but it makes it much harder to use (see [Table 5](https://lpdaac.usgs.gov/documents/103/MOD13_User_Guide_V6.pdf) of the user guide).
+ 
+```{r q1}
+from <- c(1,2,6,11)
+to   <- c(2,5,7,13)
+reject <- c("10,11", "1101,1110,1111", "11", "101,110,111")
+qa_bits <- cbind(from, to, reject)
+qa_bits
+```
+
+Unsuitable pixels can now be masked out based on the defined QA bits.
+
+```{r q2}
+library(luna)
+qc <- r[[3]]
+quality_mask <- modis_mask(qc, 16, qa_bits)
+plot(quality_mask, main="Quality mask")
+```
+
+The plot shows the pixels that pass the quality check (i.e., the pixels that shall be retained). Subsequently, the mask operation can be applied to all other images considering **NDVI** and **EVI** quality flags. For instance, the **NDVI* quality mask can be obtained as shown below. 
+
+```{r q3}
+temp <- r[[1]]*sf
+rmask <- mask(temp, quality_mask)
+plot(temp,main='quality masked image')
+```
+
+The data can also be normalized using minimum and maximum values of the image.
+
+```{r minMax}
+minMax <- function(x){
+  if(class(x)=="SpatRaster"){
+    z <- minmax(x)
+    y <- (x-z[1])/(z[2]-z[1])
+    return(y)
+  }else{
+    print("x is not a SpatRaster object")
+  }
+}
+```
+
+Normalize the image.
+
+```{r q4}
+nrmask <- minMax(rmask)
+plot(nrmask)
+```
+
+
+## Monthly vegetation indices computation
+
+Previous section has illustrated how quality assurance (QA) can be applied to an image using NDVI as an example. The same process can be applied to EVI. In this section, the quality assurance information available in the third band of **MOD13Q1** product is used to identify the bad pixels to remove in both NDVI and EVI images. The indices are then spatial aggregated over Eswatini boundary.
+
+```{r p}
+library(raster)
+sz <- getData("GADM", country="SWZ", level=0)
+#Change vector boundary coordinate reference system, so that it matches that of the MODIS data.
+prj <- crs(rmask)
+poly <- project(vect(sz),prj)
+for(i in 1:length(n)){
+  path <- paste0(root,'processed/')
+  filename <- paste0(path,gsub(".hdf","",basename(n[i])),'.tif')
+  if(!file.exists(filename)){
+    r <- rast(n[i])
+    qc <- r[[3]]
+    quality_mask <- modis_mask(qc, 16, qa_bits)
+    #NDVI
+    temp <- r[[1]]*sf
+    ndvi <- mask(temp, quality_mask)
+    ndvi <- minMax(ndvi)
+    names(ndvi) <- "NDVI"
+    #EVI
+    temp <- r[[2]]*sf
+    evi <- mask(temp, quality_mask)
+    evi <- minMax(evi)
+    names(evi) <- "EVI"
+    temp <- c(ndvi, evi)
+    path <- paste0(root,'processed/')
+    filename <- paste0(path,gsub(".hdf","",basename(n[i])),'.tif')
+    #Crop to AOI
+    out <- crop(temp, poly)
+    writeRaster(out, filename, overwrite=TRUE)
+  }
+}
+```
+
+## Monthly GPP and FPAR
+
+Gross Primary Productivity (GPP) and Fraction of Photosynthetically Active Radiation (FPAR)/ Leaf Area Index (LAI) (*MCD15A2H*) monthly can be computed in a similar way like the vegetation indices done previously. Start by processing FPAR/LAI; below are the files.
+
+```{r f1}
+n <- list.files(paste0(root,'raw'), pattern=glob2rx("*MCD15A2H*"),full.names=T)
+length(n)
+```
+
+Here, QA information available in [Table 5](https://lpdaac.usgs.gov/documents/624/MOD15_User_Guide_V6.pdf) of the user guide is applied and AOI files for FPAR/LAI saved to disk. in
+
+```{r f2}
+from <- c(2,3,5)
+to   <- c(2,4,7)
+reject <- c("1", "01", "100")
+qa_bits <- cbind(from, to, reject)
+qa_bits
+
+for(i in 1:length(n)){
+  path <- paste0(root,'processed/')
+  filename <- paste0(path,gsub(".hdf","",basename(n[i])),'.tif')
+  if(!file.exists(filename)){
+    r <- rast(n[i])
+    qc <- r[[3]]
+    quality_mask <- modis_mask(qc, 8, qa_bits)
+    #FPAR
+    sf <- 100
+    temp <- r[[1]]*sf
+    fpar <- mask(temp, quality_mask)
+    names(fpar) <- "FPAR"
+    #LAI
+    sf <- 10
+    temp <- r[[2]]*sf
+    lai <- mask(temp, quality_mask)
+    names(lai) <- "LAI"
+    temp <- c(fpar, lai)
+    #Crop to AOI
+    out <- crop(temp, poly)
+    writeRaster(out,filename,overwrite=TRUE)
+  }
+}
+```
+
+Finally, in a similar fashion QA information can applied be to MODIS GPP (*MOD17A2H*) product to obtain monthly GPP. The [QA](https://landweb.modaps.eosdis.nasa.gov/QA_WWW/forPage/user_guide/MOD17UsersGuide2019.pdf) bits in this case are similar to those in FPAR/LAI.
+
+```{r g2}
+n <- list.files(paste0(root,'raw'), pattern=glob2rx("*MOD17A2H*"),full.names=T)
+length(n)
+
+for(i in 1:length(n)){
+  path <- paste0(root,'processed/')
+  filename <- paste0(path,gsub(".hdf","",basename(n[i])),'.tif')
+  if(!file.exists(filename)){
+    r <- rast(n[i])
+    qc <- r[[3]]
+    quality_mask <- modis_mask(qc, 8, qa_bits)
+    temp <- r[[1]]
+    gpp <- mask(temp, quality_mask)
+    names(gpp) <- "GPP"
+    
+    #Crop to AOI
+    out <- crop(gpp, poly)
+    writeRaster(out, filename, overwrite=TRUE)
+  }
+}
 
 ```
 
 
+[PREVIOUS PAGE](modis.html) <<<  >>>   [NEXT PAGE](indices.html).
