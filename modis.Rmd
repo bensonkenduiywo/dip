@@ -3,8 +3,10 @@ title: "Maize yield prediction"
 bibliography: eswatini_references.bib
 csl: "apa-6th-edition.csl"
 output: 
-  bookdown::word_document2:
+   html_document:
     toc: true
+    toc_float: true
+    toc_collapsed: true
     toc_depth: 3
     number_sections: false
 editor_options: 
