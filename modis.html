@@ -291,6 +291,9 @@ $(document).ready(function () {
     <li>
       <a href="mapping.html">Crop mapping</a>
     </li>
+    <li>
+      <a href="modis.html">Yield prediction</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -438,53 +441,35 @@ length(mf)</code></pre>
 modis_path &lt;- &quot;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/raw/&quot;  
 mstart &lt;- &quot;-01-01&quot;
 mend &lt;- &quot;-03-31&quot;
-for(y in 2000:2019){
-  cat(y,&quot;downloading..\n&quot;)
+for(y in 2000:2020){
+  cat(y,&quot;downloading..\t&quot;)
   start &lt;- paste0(y,mstart)
   end   &lt;- paste0(y,mend)
   luna::getModis(product, start, end, aoi=sz, download=TRUE,
                      path=modis_path, username=pass$username,
                      password=pass$password)
 }</code></pre>
-<pre><code>## 2000 downloading..
-## 
-## 2001 downloading..
-## 
-## 2002 downloading..
-## 
-## 2003 downloading..
-## 
-## 2004 downloading..
-## 
-## 2005 downloading..
-## 
-## 2006 downloading..
-## 
-## 2007 downloading..
-## 
-## 2008 downloading..
-## 
-## 2009 downloading..
-## 
-## 2010 downloading..
-## 
-## 2011 downloading..
-## 
-## 2012 downloading..
-## 
-## 2013 downloading..
-## 
-## 2014 downloading..
-## 
-## 2015 downloading..
-## 
-## 2016 downloading..
-## 
-## 2017 downloading..
-## 
-## 2018 downloading..
-## 
-## 2019 downloading..</code></pre>
+<pre><code>## 2000 downloading..   
+## 2001 downloading..   
+## 2002 downloading..   
+## 2003 downloading..   
+## 2004 downloading..   
+## 2005 downloading..   
+## 2006 downloading..   
+## 2007 downloading..   
+## 2008 downloading..   
+## 2009 downloading..   
+## 2010 downloading..   
+## 2011 downloading..   
+## 2012 downloading..   
+## 2013 downloading..   
+## 2014 downloading..   
+## 2015 downloading..   
+## 2016 downloading..   
+## 2017 downloading..   
+## 2018 downloading..   
+## 2019 downloading..   
+## 2020 downloading..   </code></pre>
 <p>Similarly, GPP and FPAR can be downloaded by changing the product type e.g. <strong>MCD15A2H</strong> for FPAR. Next we explore the images we have downloaded and start extracting information we require for yield prediction.</p>
 <p><a href="MODISprocessing.html">NEXT PAGE</a>.</p>
 </div>

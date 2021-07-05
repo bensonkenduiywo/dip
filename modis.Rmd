@@ -62,7 +62,7 @@ modis_path <- "D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/raw/"
 mstart <- "-01-01"
 mend <- "-03-31"
 for(y in 2000:2020){
-  cat(y,"downloading..\n")
+  cat(y,"downloading..\t")
   start <- paste0(y,mstart)
   end   <- paste0(y,mend)
   luna::getModis(product, start, end, aoi=sz, download=TRUE,
