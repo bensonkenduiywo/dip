@@ -1,0 +1,212 @@
+---
+title: "Maize yield prediction in Eswatini"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, global_options, tidy = TRUE,echo=TRUE}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60))
+
+```
+
+## Introduction
+
+Maize yield information from [FAOSTAT](http://www.fao.org/faostat/en/#data) is used in this section to design a model for yield prediction based on remotely sensed Z-scored spatial-temporal indices computed previously. 
+
+## Data
+
+Load necessary packages and data (MODIS indices and reference yields).
+
+```{r refdata, message=FALSE}
+rm(list = ls(all=TRUE))
+unlink(".RData")
+library(dplyr)
+library(reshape2)
+root <- root <- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/'
+filename <- paste0(root, "MODIS/outputs/2000_2020_MODIS_st_indices.rds")
+#Indices
+index <- readRDS(filename)
+index <- as.data.frame(index)
+filename <- paste0(root, "Yields/FAOSTAT_SZ_maize_yield.csv")
+#Yields
+ref <- read.csv(filename, stringsAsFactors = F)
+
+temp <- ref[ref$Year >= 2000 & ref$Unit == "tonnes", c("Year","Value")]
+colnames(temp)[2] <- "Yield_tonnes"
+  
+```
+
+Merge yield refence data with satellite indices for model training.
+
+```{r m1}
+df <- merge(index,temp, by="Year")
+knitr::kable(df,align = "l")
+```
+
+## Modelling
+
+Is there any trends and relationship between predictors and response variables?
+
+Let us make some trend plots from the data:
+
+```{r m2}
+
+plot(Yield_tonnes~Year, data=df, xlab="Year", ylab = "Yield (MT)", type='l')
+
+```
+
+Is there any relationship between for instance NDVI and maize yield in metric tones per hectare?
+
+```{r m3, fig.cap="Relationship between maize yields and satellite metrics."}
+par(mfrow=c(2,2), mai=c(0.75,0.75,0.1,0.1))
+plot(Yield_tonnes~NDVI, data=df, pch=16, ylab= "Yield(MT)", xlab="NDVI", cex=0.9, cex.axis=1.2, cex.lab=1.2)
+plot(Yield_tonnes~EVI, data=df, pch=16, ylab= "Yield(MT)", xlab="NDMI", cex=0.9,cex.axis=1.2, cex.lab=1.2)
+plot(Yield_tonnes~GPP, data=df, pch=16, ylab= "Yield(MT)", xlab="GPP", cex=0.9, cex.axis=1.2, cex.lab=1.2)
+plot(Yield_tonnes~FPAR, data=df, pch=16, ylab= "Yield(MT)", xlab="FPAR", cex=0.9, cex.axis=1.2, cex.lab=1.2)
+```
+
+## Feature selection 
+
+We will use  random forest to check the significance of the satellite indices for maize yield prediction.
+
+```{r m4}
+library(randomForest)
+train <- df
+
+data <- na.omit(df)
+rf = randomForest(Yield_tonnes~., data=data[, -1], importance=TRUE, ntree = 500)
+importance <- importance(rf)
+importance
+rf
+varImportance <- data.frame(Variables = row.names(importance), 
+                            Importance = round(importance[ ,'%IncMSE'],2))
+
+#Create a rank variable based on importance
+rankImportance <- varImportance %>%
+  mutate(Rank = paste0('#',dense_rank(desc(Importance))))
+
+#Use ggplot2 to visualize the relative importance of variables
+library(ggthemes)
+library(ggplot2)
+ggplot(rankImportance, aes(x = reorder(Variables, Importance), 
+                           y = Importance, fill = Importance)) +
+  geom_bar(stat='identity') + 
+  geom_text(aes(x = Variables, y = 0.5, label = Rank),
+            hjust=0, vjust=0.55, size = 4, colour = 'red') +
+  labs(x = 'Remote sensing metrics') +
+  coord_flip() + 
+  theme_few(base_size = 14)
+
+```
+
+From Figure \@ref(fig:m3) there seems to be some relationship i.e. yields increases with increase in vegetation indices So let us predict 2020 yields using 2003-2019 indices and reference yields.
+
+```{r y8, message=FALSE}
+train <- data[data$Year <= 2013, ] #Training data
+newdata <- data[data$Year > 2013, ]
+#poly model
+train <- train[, -1]
+
+p.lm <- lm(Yield_tonnes~., data=train)
+summary(p.lm)
+
+#Random Forest model
+rf = randomForest(Yield_tonnes~., data=train, importance=TRUE, ntree = 500)
+importance(rf)
+rf
+
+#SVM https://rstudio-pubs-static.s3.amazonaws.com/280840_d4fb4f186d454d5dbce3ba2cbe4bbcdb.html#tune-svm-regression-model
+library(e1071)
+svm = svm(Yield_tonnes~., data=train, kernel="radial")
+svm
+#tune result
+tuneResult <- tune(method="svm", Yield_tonnes~.,  data = train, ranges = list(epsilon = seq(0,1,0.1), cost = (seq(0.5,8,.5))), kernel="radial"
+)
+tuneResult
+plot(tuneResult)
+```
+
+From the SVM tuning graph we can see that the darker the region is the better our model is (because the RMSE is closer to zero in darker regions).
+
+We can use the Root Mean Square Error (RMSE)  and mean absolute percentage error (MAPE) to evaluate the models accuracies. RMSE is given as:
+
+$$
+\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n \widehat{y}-y},
+$$
+where $\widehat{y}$  and $y$ are predicted yields and observed yields respectively while *n* is the number of fitted points.
+
+```{r rmse}
+rmse <- function(error){
+  sqrt(mean(error^2))
+}
+
+
+```
+
+MAPE is given as:
+
+$$
+\text{MAPE} = \frac{100\%}{n} \sum_{i=1}^n |\frac{y-\widehat{y}}{y}|.
+$$
+In R we can write it as:
+
+```{r mape}
+MAPE <- function (y_pred, y_true){
+    MAPE <- mean(abs((y_true - y_pred)/y_true))
+    return(MAPE*100)
+}
+```
+
+
+
+Let us predict maize yields in the years we left out using the indices based on the model.
+
+```{r y9}
+lm_y <- predict(p.lm, newdata[,-c(1,7)])
+rf_y <- predict(rf, newdata[,-c(1,7)])
+svm_y <- predict(svm, newdata[,-c(1,7)])
+svm_tuned <- predict(tuneResult$best.model, newdata[,-c(1,7)])
+
+```
+
+Compute rmse of our predictions.
+
+```{r y10}
+observed_y <- newdata[, "Yield_tonnes"]
+#RMSE from LOESS
+rmse(observed_y-lm_y)
+MAPE(observed_y, lm_y)
+#RMSE from random Forest
+rmse(observed_y-rf_y)
+MAPE(observed_y, rf_y)
+#RMSE from SVM not tuned
+rmse(observed_y-svm_y)
+MAPE(observed_y, svm_y)
+#RMSE for tuned SVM
+rmse(observed_y-svm_tuned)
+MAPE(observed_y,svm_tuned)
+
+```
+
+So we choose a model with the lowest RMSE and MAPE and subsequently use it to predict yields in 2020. It also obvious that we would be better off with a high enough data sample. In this case RF model did better and we can use it.
+
+```{r y11}
+
+rf <- randomForest(Yield_tonnes~., data=na.omit(df[,-1]), importance=TRUE, ntree = 500)
+newdata <- index[index$Year==2020, ]
+rf_y <- predict(rf, newdata)
+rf_y
+```
+
+The predicted maize yield for the year 2020 is 94010.84 tonnes.
+
+
+[PREVIOUS PAGE](index.html).

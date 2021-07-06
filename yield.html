@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Maize yield prediction in Eswatini</title>
+
+<script src="site_libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Digital Image Processing in R</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="fas fa-home"></span>
+     
+    Home
+  </a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fas fa-gear"></span>
+     
+    More
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="lesson1.html">Data storage schema</a>
+    </li>
+    <li>
+      <a href="fusion.html">Image Fusion</a>
+    </li>
+    <li>
+      <a href="mapping.html">Crop mapping</a>
+    </li>
+    <li>
+      <a href="modis.html">Yield prediction</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="mailto:bensonkemboi@gmail.com">
+    <span class="fas fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="http://github.com/bensonkenduiywo">
+    <span class="fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://twitter.com/bensonkenduiywo">
+    <span class="fab fa-twitter fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://www.linkedin.com/in/benson-kenduiywo-1a218137">
+    <span class="fab fa-linkedin fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Maize yield prediction in Eswatini</h1>
+
+</div>
+
+
+<pre class="r"><code>library(knitr)
+opts_chunk$set(tidy.opts = list(width.cutoff = 60))</code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Maize yield information from <a href="http://www.fao.org/faostat/en/#data">FAOSTAT</a> is used in this section to design a model for yield prediction based on remotely sensed Z-scored spatial-temporal indices computed previously.</p>
+</div>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>Load necessary packages and data (MODIS indices and reference yields).</p>
+<pre class="r"><code>rm(list = ls(all=TRUE))
+unlink(&quot;.RData&quot;)
+library(dplyr)
+library(reshape2)
+root &lt;- root &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/&#39;
+filename &lt;- paste0(root, &quot;MODIS/outputs/2000_2020_MODIS_st_indices.rds&quot;)
+#Indices
+index &lt;- readRDS(filename)
+index &lt;- as.data.frame(index)
+filename &lt;- paste0(root, &quot;Yields/FAOSTAT_SZ_maize_yield.csv&quot;)
+#Yields
+ref &lt;- read.csv(filename, stringsAsFactors = F)
+
+temp &lt;- ref[ref$Year &gt;= 2000 &amp; ref$Unit == &quot;tonnes&quot;, c(&quot;Year&quot;,&quot;Value&quot;)]
+colnames(temp)[2] &lt;- &quot;Yield_tonnes&quot;</code></pre>
+<p>Merge yield refence data with satellite indices for model training.</p>
+<pre class="r"><code>df &lt;- merge(index,temp, by=&quot;Year&quot;)
+knitr::kable(df,align = &quot;l&quot;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Year</th>
+<th align="left">NDVI</th>
+<th align="left">EVI</th>
+<th align="left">FPAR</th>
+<th align="left">LAI</th>
+<th align="left">GPP</th>
+<th align="left">Yield_tonnes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2000</td>
+<td align="left">0.7411606</td>
+<td align="left">0.4212527</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">0.4953546</td>
+<td align="left">112779</td>
+</tr>
+<tr class="even">
+<td align="left">2001</td>
+<td align="left">0.2562051</td>
+<td align="left">-0.0524735</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">0.1678476</td>
+<td align="left">82536</td>
+</tr>
+<tr class="odd">
+<td align="left">2002</td>
+<td align="left">-0.8384683</td>
+<td align="left">-0.6522269</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">-0.0020507</td>
+<td align="left">67639</td>
+</tr>
+<tr class="even">
+<td align="left">2003</td>
+<td align="left">-0.4130928</td>
+<td align="left">-0.2029017</td>
+<td align="left">-0.0499667</td>
+<td align="left">-0.1897696</td>
+<td align="left">-1.3033065</td>
+<td align="left">69273</td>
+</tr>
+<tr class="odd">
+<td align="left">2004</td>
+<td align="left">0.3985244</td>
+<td align="left">-0.1499997</td>
+<td align="left">-0.3330661</td>
+<td align="left">-0.4115298</td>
+<td align="left">-0.5767296</td>
+<td align="left">68087</td>
+</tr>
+<tr class="even">
+<td align="left">2005</td>
+<td align="left">0.5200565</td>
+<td align="left">0.3024980</td>
+<td align="left">0.0452522</td>
+<td align="left">0.1304741</td>
+<td align="left">-0.2504898</td>
+<td align="left">74540</td>
+</tr>
+<tr class="odd">
+<td align="left">2006</td>
+<td align="left">0.0471496</td>
+<td align="left">0.6077305</td>
+<td align="left">0.5025639</td>
+<td align="left">0.4582647</td>
+<td align="left">0.6186566</td>
+<td align="left">67127</td>
+</tr>
+<tr class="even">
+<td align="left">2007</td>
+<td align="left">-1.2828916</td>
+<td align="left">-1.0719244</td>
+<td align="left">-0.7466142</td>
+<td align="left">-0.9988909</td>
+<td align="left">-1.3969325</td>
+<td align="left">26170</td>
+</tr>
+<tr class="odd">
+<td align="left">2008</td>
+<td align="left">-0.4744662</td>
+<td align="left">-0.9791409</td>
+<td align="left">-0.9984130</td>
+<td align="left">-1.0110070</td>
+<td align="left">-0.4620659</td>
+<td align="left">60012</td>
+</tr>
+<tr class="even">
+<td align="left">2009</td>
+<td align="left">0.7286867</td>
+<td align="left">0.3894363</td>
+<td align="left">0.0913193</td>
+<td align="left">0.1342706</td>
+<td align="left">0.3988854</td>
+<td align="left">75068</td>
+</tr>
+<tr class="odd">
+<td align="left">2010</td>
+<td align="left">0.3278463</td>
+<td align="left">0.5995387</td>
+<td align="left">-0.0228007</td>
+<td align="left">0.0389736</td>
+<td align="left">0.2838685</td>
+<td align="left">84685</td>
+</tr>
+<tr class="even">
+<td align="left">2011</td>
+<td align="left">1.3804522</td>
+<td align="left">0.3092396</td>
+<td align="left">0.2728595</td>
+<td align="left">0.8178207</td>
+<td align="left">-0.2355459</td>
+<td align="left">75418</td>
+</tr>
+<tr class="odd">
+<td align="left">2012</td>
+<td align="left">0.2716715</td>
+<td align="left">0.3085555</td>
+<td align="left">0.3331407</td>
+<td align="left">0.0599877</td>
+<td align="left">-0.0508391</td>
+<td align="left">81934</td>
+</tr>
+<tr class="even">
+<td align="left">2013</td>
+<td align="left">0.7041746</td>
+<td align="left">0.5348404</td>
+<td align="left">0.9638229</td>
+<td align="left">0.9420392</td>
+<td align="left">0.4789121</td>
+<td align="left">118871</td>
+</tr>
+<tr class="odd">
+<td align="left">2014</td>
+<td align="left">0.4316308</td>
+<td align="left">0.7035212</td>
+<td align="left">0.8211876</td>
+<td align="left">0.9991961</td>
+<td align="left">1.5665477</td>
+<td align="left">119000</td>
+</tr>
+<tr class="even">
+<td align="left">2015</td>
+<td align="left">-1.0552476</td>
+<td align="left">-0.5846196</td>
+<td align="left">-0.2758198</td>
+<td align="left">-0.2954577</td>
+<td align="left">-0.3370502</td>
+<td align="left">82000</td>
+</tr>
+<tr class="odd">
+<td align="left">2016</td>
+<td align="left">-3.1728263</td>
+<td align="left">-3.5066937</td>
+<td align="left">-3.3533974</td>
+<td align="left">-3.1888528</td>
+<td align="left">-2.5380942</td>
+<td align="left">33000</td>
+</tr>
+<tr class="even">
+<td align="left">2017</td>
+<td align="left">0.0503048</td>
+<td align="left">0.3766478</td>
+<td align="left">0.8494430</td>
+<td align="left">0.8072019</td>
+<td align="left">2.2484281</td>
+<td align="left">84000</td>
+</tr>
+<tr class="odd">
+<td align="left">2018</td>
+<td align="left">-0.1531849</td>
+<td align="left">0.5785767</td>
+<td align="left">0.4927239</td>
+<td align="left">0.3289629</td>
+<td align="left">0.2613869</td>
+<td align="left">113000</td>
+</tr>
+<tr class="even">
+<td align="left">2019</td>
+<td align="left">0.2521144</td>
+<td align="left">1.1465457</td>
+<td align="left">0.7457823</td>
+<td align="left">0.7345936</td>
+<td align="left">0.6511760</td>
+<td align="left">95000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="modelling" class="section level2">
+<h2>Modelling</h2>
+<p>Is there any trends and relationship between predictors and response variables?</p>
+<p>Let us make some trend plots from the data:</p>
+<pre class="r"><code>plot(Yield_tonnes~Year, data=df, xlab=&quot;Year&quot;, ylab = &quot;Yield (MT)&quot;, type=&#39;l&#39;)</code></pre>
+<p><img src="yield_files/figure-html/m2-1.png" width="672" /></p>
+<p>Is there any relationship between for instance NDVI and maize yield in metric tones per hectare?</p>
+<pre class="r"><code>par(mfrow=c(2,2), mai=c(0.75,0.75,0.1,0.1))
+plot(Yield_tonnes~NDVI, data=df, pch=16, ylab= &quot;Yield(MT)&quot;, xlab=&quot;NDVI&quot;, cex=0.9, cex.axis=1.2, cex.lab=1.2)
+plot(Yield_tonnes~EVI, data=df, pch=16, ylab= &quot;Yield(MT)&quot;, xlab=&quot;NDMI&quot;, cex=0.9,cex.axis=1.2, cex.lab=1.2)
+plot(Yield_tonnes~GPP, data=df, pch=16, ylab= &quot;Yield(MT)&quot;, xlab=&quot;GPP&quot;, cex=0.9, cex.axis=1.2, cex.lab=1.2)
+plot(Yield_tonnes~FPAR, data=df, pch=16, ylab= &quot;Yield(MT)&quot;, xlab=&quot;FPAR&quot;, cex=0.9, cex.axis=1.2, cex.lab=1.2)</code></pre>
+<div class="figure">
+<img src="yield_files/figure-html/m3-1.png" alt="Relationship between maize yields and satellite metrics." width="672" />
+<p class="caption">
+Relationship between maize yields and satellite metrics.
+</p>
+</div>
+</div>
+<div id="feature-selection" class="section level2">
+<h2>Feature selection</h2>
+<p>We will use random forest to check the significance of the satellite indices for maize yield prediction.</p>
+<pre class="r"><code>library(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-14</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;randomForest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     combine</code></pre>
+<pre class="r"><code>train &lt;- df
+
+data &lt;- na.omit(df)
+rf = randomForest(Yield_tonnes~., data=data[, -1], importance=TRUE, ntree = 500)
+importance &lt;- importance(rf)
+importance</code></pre>
+<pre><code>##       %IncMSE IncNodePurity
+## NDVI 1.444039    1566907492
+## EVI  7.605693    1764283558
+## FPAR 7.564089    2032271516
+## LAI  8.017084    1974147276
+## GPP  6.360913    1547766612</code></pre>
+<pre class="r"><code>rf</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = Yield_tonnes ~ ., data = data[, -1], importance = TRUE,      ntree = 500) 
+##                Type of random forest: regression
+##                      Number of trees: 500
+## No. of variables tried at each split: 1
+## 
+##           Mean of squared residuals: 356485559
+##                     % Var explained: 41.35</code></pre>
+<pre class="r"><code>varImportance &lt;- data.frame(Variables = row.names(importance), 
+                            Importance = round(importance[ ,&#39;%IncMSE&#39;],2))
+
+#Create a rank variable based on importance
+rankImportance &lt;- varImportance %&gt;%
+  mutate(Rank = paste0(&#39;#&#39;,dense_rank(desc(Importance))))
+
+#Use ggplot2 to visualize the relative importance of variables
+library(ggthemes)
+library(ggplot2)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;ggplot2&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:randomForest&#39;:
+## 
+##     margin</code></pre>
+<pre class="r"><code>ggplot(rankImportance, aes(x = reorder(Variables, Importance), 
+                           y = Importance, fill = Importance)) +
+  geom_bar(stat=&#39;identity&#39;) + 
+  geom_text(aes(x = Variables, y = 0.5, label = Rank),
+            hjust=0, vjust=0.55, size = 4, colour = &#39;red&#39;) +
+  labs(x = &#39;Remote sensing metrics&#39;) +
+  coord_flip() + 
+  theme_few(base_size = 14)</code></pre>
+<p><img src="yield_files/figure-html/m4-1.png" width="672" /></p>
+<p>From Figure @ref(fig:m3) there seems to be some relationship i.e. yields increases with increase in vegetation indices So let us predict 2020 yields using 2003-2019 indices and reference yields.</p>
+<pre class="r"><code>train &lt;- data[data$Year &lt;= 2013, ] #Training data
+newdata &lt;- data[data$Year &gt; 2013, ]
+#poly model
+train &lt;- train[, -1]
+
+p.lm &lt;- lm(Yield_tonnes~., data=train)
+summary(p.lm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Yield_tonnes ~ ., data = train)
+## 
+## Residuals:
+##        4        5        6        7        8        9       10       11 
+##  10989.8  -3511.2    166.7 -14191.8 -12235.2  12032.8  -9583.4  14509.2 
+##       12       13       14 
+##  -7459.9  -5831.1  15114.0 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)    70736       6902  10.249 0.000152 ***
+## NDVI           20383      16814   1.212 0.279552    
+## EVI           -11609      23716  -0.490 0.645201    
+## FPAR           51831      38814   1.335 0.239320    
+## LAI           -30351      38508  -0.788 0.466299    
+## GPP             7334      12361   0.593 0.578817    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 15810 on 5 degrees of freedom
+## Multiple R-squared:  0.7379, Adjusted R-squared:  0.4758 
+## F-statistic: 2.815 on 5 and 5 DF,  p-value: 0.1403</code></pre>
+<pre class="r"><code>#Random Forest model
+rf = randomForest(Yield_tonnes~., data=train, importance=TRUE, ntree = 500)
+importance(rf)</code></pre>
+<pre><code>##       %IncMSE IncNodePurity
+## NDVI 3.710056     765252236
+## EVI  5.604258     707891238
+## FPAR 3.959830     868635168
+## LAI  4.556663     673492076
+## GPP  2.949243     790463031</code></pre>
+<pre class="r"><code>rf</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = Yield_tonnes ~ ., data = train, importance = TRUE,      ntree = 500) 
+##                Type of random forest: regression
+##                      Number of trees: 500
+## No. of variables tried at each split: 1
+## 
+##           Mean of squared residuals: 399536586
+##                     % Var explained: 7.8</code></pre>
+<pre class="r"><code>#SVM https://rstudio-pubs-static.s3.amazonaws.com/280840_d4fb4f186d454d5dbce3ba2cbe4bbcdb.html#tune-svm-regression-model
+library(e1071)
+svm = svm(Yield_tonnes~., data=train, kernel=&quot;radial&quot;)
+svm</code></pre>
+<pre><code>## 
+## Call:
+## svm(formula = Yield_tonnes ~ ., data = train, kernel = &quot;radial&quot;)
+## 
+## 
+## Parameters:
+##    SVM-Type:  eps-regression 
+##  SVM-Kernel:  radial 
+##        cost:  1 
+##       gamma:  0.2 
+##     epsilon:  0.1 
+## 
+## 
+## Number of Support Vectors:  9</code></pre>
+<pre class="r"><code>#tune result
+tuneResult &lt;- tune(method=&quot;svm&quot;, Yield_tonnes~.,  data = train, ranges = list(epsilon = seq(0,1,0.1), cost = (seq(0.5,8,.5))), kernel=&quot;radial&quot;
+)
+tuneResult</code></pre>
+<pre><code>## 
+## Parameter tuning of &#39;svm&#39;:
+## 
+## - sampling method: 10-fold cross validation 
+## 
+## - best parameters:
+##  epsilon cost
+##        0  0.5
+## 
+## - best performance: 454040625</code></pre>
+<pre class="r"><code>plot(tuneResult)</code></pre>
+<p><img src="yield_files/figure-html/y8-1.png" width="672" /></p>
+<p>From the SVM tuning graph we can see that the darker the region is the better our model is (because the RMSE is closer to zero in darker regions).</p>
+<p>We can use the Root Mean Square Error (RMSE) and mean absolute percentage error (MAPE) to evaluate the models accuracies. RMSE is given as:</p>
+<p><span class="math display">\[
+\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n \widehat{y}-y},
+\]</span> where <span class="math inline">\(\widehat{y}\)</span> and <span class="math inline">\(y\)</span> are predicted yields and observed yields respectively while <em>n</em> is the number of fitted points.</p>
+<pre class="r"><code>rmse &lt;- function(error){
+  sqrt(mean(error^2))
+}</code></pre>
+<p>MAPE is given as:</p>
+<p><span class="math display">\[
+\text{MAPE} = \frac{100\%}{n} \sum_{i=1}^n |\frac{y-\widehat{y}}{y}|.
+\]</span> In R we can write it as:</p>
+<pre class="r"><code>MAPE &lt;- function (y_pred, y_true){
+    MAPE &lt;- mean(abs((y_true - y_pred)/y_true))
+    return(MAPE*100)
+}</code></pre>
+<p>Let us predict maize yields in the years we left out using the indices based on the model.</p>
+<pre class="r"><code>lm_y &lt;- predict(p.lm, newdata[,-c(1,7)])
+rf_y &lt;- predict(rf, newdata[,-c(1,7)])
+svm_y &lt;- predict(svm, newdata[,-c(1,7)])
+svm_tuned &lt;- predict(tuneResult$best.model, newdata[,-c(1,7)])</code></pre>
+<p>Compute rmse of our predictions.</p>
+<pre class="r"><code>observed_y &lt;- newdata[, &quot;Yield_tonnes&quot;]
+#RMSE from LOESS
+rmse(observed_y-lm_y)</code></pre>
+<pre><code>## [1] 41067</code></pre>
+<pre class="r"><code>MAPE(observed_y, lm_y)</code></pre>
+<pre><code>## [1] 56.53507</code></pre>
+<pre class="r"><code>#RMSE from random Forest
+rmse(observed_y-rf_y)</code></pre>
+<pre><code>## [1] 19753.25</code></pre>
+<pre class="r"><code>MAPE(observed_y, rf_y)</code></pre>
+<pre><code>## [1] 22.26277</code></pre>
+<pre class="r"><code>#RMSE from SVM not tuned
+rmse(observed_y-svm_y)</code></pre>
+<pre><code>## [1] 30644.81</code></pre>
+<pre class="r"><code>MAPE(observed_y, svm_y)</code></pre>
+<pre><code>## [1] 40.20859</code></pre>
+<pre class="r"><code>#RMSE for tuned SVM
+rmse(observed_y-svm_tuned)</code></pre>
+<pre><code>## [1] 31383.96</code></pre>
+<pre class="r"><code>MAPE(observed_y,svm_tuned)</code></pre>
+<pre><code>## [1] 40.74543</code></pre>
+<p>So we choose a model with the lowest RMSE and MAPE and subsequently use it to predict yields in 2020. It also obvious that we would be better off with a high enough data sample. In this case RF model did better and we can use it.</p>
+<pre class="r"><code>rf &lt;- randomForest(Yield_tonnes~., data=na.omit(df[,-1]), importance=TRUE, ntree = 500)
+newdata &lt;- index[index$Year==2020, ]
+rf_y &lt;- predict(rf, newdata)
+rf_y</code></pre>
+<pre><code>##       21 
+## 92674.83</code></pre>
+<p>The predicted maize yield for the year 2020 is 94010.84 tonnes.</p>
+<p><a href="index.html">PREVIOUS PAGE</a>.</p>
+</div>
+
+<p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

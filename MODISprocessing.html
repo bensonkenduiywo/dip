@@ -394,7 +394,9 @@ div.tocify {
 <div id="vegetation-indices" class="section level2">
 <h2>Vegetation Indices</h2>
 <p>Here we load previously downloaded NDVI and EVI files and define scale factor their scale factor.</p>
-<pre class="r"><code>sf &lt;- 0.0001 #scalefactor
+<pre class="r"><code>rm(list = ls(all=TRUE))
+unlink(&quot;.RData&quot;)
+sf &lt;- 0.0001 #scalefactor
 root &lt;- &#39;D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/&#39;
 n &lt;- list.files(paste0(root,&#39;raw&#39;), pattern=glob2rx(&quot;*MOD13Q1*&quot;),full.names=T)
 length(n)</code></pre>
@@ -486,12 +488,12 @@ qc &lt;- r[[3]]
 quality_mask &lt;- modis_mask(qc, 16, qa_bits)
 plot(quality_mask, main=&quot;Quality mask&quot;)</code></pre>
 <p><img src="MODISprocessing_files/figure-html/q2-1.png" width="672" /></p>
-<p>The plot shows the pixels that pass the quality check (i.e., the pixels that shall be retained). Subsequently, the mask operation can be applied to all other images considering <strong>NDVI</strong> and <strong>EVI</strong> quality flags. For instance, the **NDVI* quality mask can be obtained as shown below.</p>
+<p>The plot shows the pixels that pass the quality check (i.e., the pixels that shall be retained). Subsequently, the mask operation can be applied to all other images considering <strong>NDVI</strong> and <strong>EVI</strong> quality flags. For instance, the **NDVI* quality mask can be obtained as shown below. NB: NDVI and EVI data is the range of -2000–10000, see <a href="https://lpdaac.usgs.gov/products/mod13q1v006/">USGS</a>.</p>
 <pre class="r"><code>temp &lt;- r[[1]]*sf
 rmask &lt;- mask(temp, quality_mask)
 plot(temp,main=&#39;quality masked image&#39;)</code></pre>
 <p><img src="MODISprocessing_files/figure-html/q3-1.png" width="672" /></p>
-<p>The data can also be normalized using minimum and maximum values of the image.</p>
+<p>If need be, the data can be normalized using minimum and maximum values of the image. However, later we will use Z-scores to standardize the data and detect long term anomalies of the index.</p>
 <pre class="r"><code>minMax &lt;- function(x){
   if(class(x)==&quot;SpatRaster&quot;){
     z &lt;- minmax(x)
@@ -525,12 +527,10 @@ for(i in 1:length(n)){
     #NDVI
     temp &lt;- r[[1]]*sf
     ndvi &lt;- mask(temp, quality_mask)
-    ndvi &lt;- minMax(ndvi)
     names(ndvi) &lt;- &quot;NDVI&quot;
     #EVI
     temp &lt;- r[[2]]*sf
     evi &lt;- mask(temp, quality_mask)
-    evi &lt;- minMax(evi)
     names(evi) &lt;- &quot;EVI&quot;
     temp &lt;- c(ndvi, evi)
     path &lt;- paste0(root,&#39;processed/&#39;)
