@@ -209,4 +209,4 @@ rf_y
 The predicted maize yield for the year 2020 is 94010.84 tonnes.
 
 
-[PREVIOUS PAGE](index.html).
+[**PREVIOUS PAGE**](index.html).

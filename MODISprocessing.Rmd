@@ -234,4 +234,4 @@ for(i in 1:length(n)){
 ```
 
 
-[PREVIOUS PAGE](modis.html) <<<  >>>   [NEXT PAGE](indices.html).
+[**PREVIOUS PAGE**](modis.html) <<<  >>>   [**NEXT PAGE**](indices.html).

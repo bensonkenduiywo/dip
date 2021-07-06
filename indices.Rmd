@@ -131,4 +131,4 @@ saveRDS(scores, paste0(root,'outputs/2000_2020_MODIS_st_indices.rds'))
 
 ```
 
-[PREVIOUS PAGE](MODISprocessing.html) <<<  >>>   [NEXT PAGE](yield.html).
+[**PREVIOUS PAGE**](MODISprocessing.html) <<<  >>>   [**NEXT PAGE**](yield.html).

@@ -76,7 +76,7 @@ for(y in 2000:2020){
 
 Similarly, GPP and FPAR can be downloaded by changing the product type e.g. **MCD15A2H** for FPAR. Next we explore the images we have downloaded and start extracting information we require for yield prediction.
 
-[NEXT PAGE](MODISprocessing.html).
+[**NEXT PAGE**](MODISprocessing.html).
 
 ## References
 

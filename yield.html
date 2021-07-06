@@ -650,11 +650,11 @@ rf = randomForest(Yield_tonnes~., data=data[, -1], importance=TRUE, ntree = 500)
 importance &lt;- importance(rf)
 importance</code></pre>
 <pre><code>##       %IncMSE IncNodePurity
-## NDVI 1.444039    1566907492
-## EVI  7.605693    1764283558
-## FPAR 7.564089    2032271516
-## LAI  8.017084    1974147276
-## GPP  6.360913    1547766612</code></pre>
+## NDVI 2.023014    1598126228
+## EVI  7.126598    1709219119
+## FPAR 7.355854    1753478416
+## LAI  7.348654    1896365793
+## GPP  6.589853    1772987638</code></pre>
 <pre class="r"><code>rf</code></pre>
 <pre><code>## 
 ## Call:
@@ -663,8 +663,8 @@ importance</code></pre>
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 1
 ## 
-##           Mean of squared residuals: 356485559
-##                     % Var explained: 41.35</code></pre>
+##           Mean of squared residuals: 363342792
+##                     % Var explained: 40.22</code></pre>
 <pre class="r"><code>varImportance &lt;- data.frame(Variables = row.names(importance), 
                             Importance = round(importance[ ,&#39;%IncMSE&#39;],2))
 
@@ -725,11 +725,11 @@ summary(p.lm)</code></pre>
 rf = randomForest(Yield_tonnes~., data=train, importance=TRUE, ntree = 500)
 importance(rf)</code></pre>
 <pre><code>##       %IncMSE IncNodePurity
-## NDVI 3.710056     765252236
-## EVI  5.604258     707891238
-## FPAR 3.959830     868635168
-## LAI  4.556663     673492076
-## GPP  2.949243     790463031</code></pre>
+## NDVI 3.775943     760541215
+## EVI  4.924809     664381150
+## FPAR 4.038208     953335597
+## LAI  3.036205     655371315
+## GPP  4.337149     796134782</code></pre>
 <pre class="r"><code>rf</code></pre>
 <pre><code>## 
 ## Call:
@@ -738,8 +738,8 @@ importance(rf)</code></pre>
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 1
 ## 
-##           Mean of squared residuals: 399536586
-##                     % Var explained: 7.8</code></pre>
+##           Mean of squared residuals: 398422113
+##                     % Var explained: 8.06</code></pre>
 <pre class="r"><code>#SVM https://rstudio-pubs-static.s3.amazonaws.com/280840_d4fb4f186d454d5dbce3ba2cbe4bbcdb.html#tune-svm-regression-model
 library(e1071)
 svm = svm(Yield_tonnes~., data=train, kernel=&quot;radial&quot;)
@@ -771,7 +771,7 @@ tuneResult</code></pre>
 ##  epsilon cost
 ##        0  0.5
 ## 
-## - best performance: 454040625</code></pre>
+## - best performance: 455161619</code></pre>
 <pre class="r"><code>plot(tuneResult)</code></pre>
 <p><img src="yield_files/figure-html/y8-1.png" width="672" /></p>
 <p>From the SVM tuning graph we can see that the darker the region is the better our model is (because the RMSE is closer to zero in darker regions).</p>
@@ -804,9 +804,9 @@ rmse(observed_y-lm_y)</code></pre>
 <pre><code>## [1] 56.53507</code></pre>
 <pre class="r"><code>#RMSE from random Forest
 rmse(observed_y-rf_y)</code></pre>
-<pre><code>## [1] 19753.25</code></pre>
+<pre><code>## [1] 20048.64</code></pre>
 <pre class="r"><code>MAPE(observed_y, rf_y)</code></pre>
-<pre><code>## [1] 22.26277</code></pre>
+<pre><code>## [1] 22.38854</code></pre>
 <pre class="r"><code>#RMSE from SVM not tuned
 rmse(observed_y-svm_y)</code></pre>
 <pre><code>## [1] 30644.81</code></pre>
@@ -823,9 +823,9 @@ newdata &lt;- index[index$Year==2020, ]
 rf_y &lt;- predict(rf, newdata)
 rf_y</code></pre>
 <pre><code>##       21 
-## 92674.83</code></pre>
+## 92500.98</code></pre>
 <p>The predicted maize yield for the year 2020 is 94010.84 tonnes.</p>
-<p><a href="index.html">PREVIOUS PAGE</a>.</p>
+<p><a href="index.html"><strong>PREVIOUS PAGE</strong></a>.</p>
 </div>
 
 <p> Created 14th May 2021 Copyright &copy; Benson Kenduiywo, Inc. All rights reserved.</p>
