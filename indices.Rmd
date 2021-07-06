@@ -1,0 +1,134 @@
+---
+title: "Spatial-temporal index computation"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The term **index** is used to refer remote sensed vegetation metrics derived from Moderate Resolution Imaging Spectroradiometer
+(MODIS) products aggregated spatially and temporal with reference to a given area on the Earth surface.
+
+## Temporal index aggregation
+
+This section illustrates how to aggregate the already pre-computed over the entire analysis period (i.e. 2000--2020). The mean is adopted as an aggregation function. To start off relevant files are loaded.
+
+```{r t1}
+rm(list = ls(all=TRUE))
+unlink(".RData")
+root <- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/'
+path <- paste0(root,'processed/')
+#16 day NDVI & EVI composite from Terra
+n <- list.files(path, pattern=glob2rx("*MOD13Q1*"),full.names=T)
+length(n)
+#8 day 500 m FPAR & LAI composite from Terra & Aqua
+f <- list.files(path, pattern=glob2rx("*MCD15A2H*"),full.names=T)
+length(f)
+#8 day GPP composite from Terra
+g <- list.files(path, pattern=glob2rx("*MOD17A2H*"),full.names=T)
+length(g)
+```
+
+Get the study area boundary re-project it to MODIS's sinusoidial coordinate reference system.
+
+```{r t3}
+library(terra)
+library(raster)
+sz <- getData("GADM", country="SWZ", level=0)
+temp <- rast(n[1])
+prj <- crs(temp)
+poly <- project(vect(sz),prj)
+```
+
+In temporal aggregation, the vegetation indices are aggregated over the maize growing season (January--March) of each corresponding year. Therefore, relevant files in each have to be selected. This can be done using this function.
+
+```{r t4}
+startSeason <- "01-01"
+endSeason   <- "03-31"
+selectModisFiles <- function(files, startdate, enddate) {
+  base_names <- basename(files)
+  dates <- MODIS::extractDate(base_names, asDate = TRUE)$inputLayerDates
+  i <- (dates >= as.Date(startdate)) & (dates <= as.Date(enddate))
+  files[i]
+}
+```
+
+The function can then be used aid temporal aggregation of vegetation indices.
+
+```{r t5}
+spatialTempAgg <- function(files, startyear, endyear){
+  st_v <- c()
+  for(year in startyear:endyear) {
+    season <- selectModisFiles(files, paste0(year, "-", startSeason), paste0(year, "-", endSeason))
+    if(length(season) > 0){
+      vi <- rast(season)
+      temporal <- tapp(vi, index =  names(vi), fun = "mean", na.rm = T)
+      st <- extract(temporal, poly, fun=mean, na.rm=TRUE)
+      st$ID <- year
+      st_v <- c(st_v, st)
+      #filename <- paste0(path, sub("\\..*", "", basename(n[1])), '_',year,"_",index ,'.tif')
+      #writeRaster(temporal, filename = filename , overwrite=TRUE)
+    }else{
+      print(paste(year,"growing season image is not available!"))
+    }
+  }
+  return(st_v)
+}
+```
+
+Use `spatialTempAgg` function to compute spatial-temporal indices for all products.
+
+```{r t6}
+startyear <- 2000
+endyear   <- 2020
+#NDVI_EVI
+vi_st <- spatialTempAgg(n, startyear, endyear)
+vi_st <- data.frame(matrix(unlist(vi_st), nrow=length(startyear:endyear), byrow=TRUE))
+names(vi_st) <- c('Year','NDVI','EVI')
+saveRDS(vi_st, paste0(root,'outputs/2000_2020_NDVI_EVI.rds'))
+
+#FPAR/LAI
+fpar_st <- spatialTempAgg(f, startyear, endyear)
+fpar_st <- data.frame(matrix(unlist(fpar_st), nrow=length(fpar_st$ID:endyear), byrow=TRUE))
+names(fpar_st) <- c('Year','FPAR','LAI')
+saveRDS(fpar_st, paste0(root,'outputs/2000_2020_FPAR_LAI.rds'))
+
+#GPP
+gpp_st <- spatialTempAgg(g, startyear, endyear)
+gpp_st <- data.frame(matrix(unlist(gpp_st), nrow=length(startyear:endyear), byrow=TRUE))
+names(gpp_st) <- c('Year','GPP')
+saveRDS(gpp_st, paste0(root,'outputs/2000_2020_FPAR_LAI.rds'))
+
+```
+
+## Z-score standardization
+
+A Z-score (*Z*) is a standardization that describes a value's relationship to the mean of a group of *n* observed values $x \in x_1,x_2, \dots, \x_n$. It is computed in terms of standard deviations $\sigma$ from the mean $\mu$. If a Z-score is 0, it indicates that the data point's score is identical to the mean score. A Z-score of 1.0 indicates a value that is one standard deviation from the mean. These scores can be positive or negative which indicates that the score is above the mean or below the mean respectively. Here, we compute Z-scores temporal in order to capture long-term deviations of an index from the average. Z-score is expressed $ Z(x_i)=\frac{x_i-\mu(x)}{\sigma(x)}$; the function is as indicated below.
+
+```{r zscore}
+zscore <- function(y){
+  (y - mean(y, na.rm=TRUE) ) / (sd(y, na.rm=TRUE))
+}
+
+```
+
+Finally, we compute Z-score values of all indices.
+
+```{r z1}
+#Combine Indices
+index  <- Reduce(function(x,y) merge(x = x, y = y, all =TRUE), list(vi_st, fpar_st, gpp_st))
+scores <- apply(index[,-1], 2, zscore)
+scores <- cbind(index[,"Year"], scores)
+colnames(scores)[1] <- "Year"
+saveRDS(scores, paste0(root,'outputs/2000_2020_MODIS_st_indices.rds'))
+
+```
+
+[PREVIOUS PAGE](MODISprocessing.html) <<<  >>>   [NEXT PAGE](yield.html).
