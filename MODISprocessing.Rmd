@@ -20,6 +20,8 @@ After downloading MODIS data, it is necessary to apply quality mask to the desir
 Here we load previously downloaded NDVI and EVI files and define scale factor their scale factor.
 
 ```{r m1}
+rm(list = ls(all=TRUE))
+unlink(".RData")
 sf <- 0.0001 #scalefactor
 root <- 'D:/JKUAT/RESEARCH_Projects/Eswatini/Data/MODIS/'
 n <- list.files(paste0(root,'raw'), pattern=glob2rx("*MOD13Q1*"),full.names=T)
@@ -98,7 +100,7 @@ quality_mask <- modis_mask(qc, 16, qa_bits)
 plot(quality_mask, main="Quality mask")
 ```
 
-The plot shows the pixels that pass the quality check (i.e., the pixels that shall be retained). Subsequently, the mask operation can be applied to all other images considering **NDVI** and **EVI** quality flags. For instance, the **NDVI* quality mask can be obtained as shown below. 
+The plot shows the pixels that pass the quality check (i.e., the pixels that shall be retained). Subsequently, the mask operation can be applied to all other images considering **NDVI** and **EVI** quality flags. For instance, the **NDVI* quality mask can be obtained as shown below. NB: NDVI and EVI data is the range of -2000--10000, see [USGS](https://lpdaac.usgs.gov/products/mod13q1v006/). 
 
 ```{r q3}
 temp <- r[[1]]*sf
@@ -106,7 +108,7 @@ rmask <- mask(temp, quality_mask)
 plot(temp,main='quality masked image')
 ```
 
-The data can also be normalized using minimum and maximum values of the image.
+If need be, the data can be normalized using minimum and maximum values of the image. However, later we will use Z-scores to standardize the data and detect long term anomalies of the index.
 
 ```{r minMax}
 minMax <- function(x){
@@ -148,12 +150,10 @@ for(i in 1:length(n)){
     #NDVI
     temp <- r[[1]]*sf
     ndvi <- mask(temp, quality_mask)
-    ndvi <- minMax(ndvi)
     names(ndvi) <- "NDVI"
     #EVI
     temp <- r[[2]]*sf
     evi <- mask(temp, quality_mask)
-    evi <- minMax(evi)
     names(evi) <- "EVI"
     temp <- c(ndvi, evi)
     path <- paste0(root,'processed/')
